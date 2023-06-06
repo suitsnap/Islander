@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, AttachmentBuilder } = require("discord.js");
-const { createCanvas, loadImage } = require("@napi-rs/canvas");
+const { createCanvas, loadImage, GlobalFonts} = require("@napi-rs/canvas");
+
 
 module.exports = {
   // Create Slash Command for Team Images
@@ -55,13 +56,12 @@ module.exports = {
             .setDescription("The user who will be in Space #4")
             .setRequired(true)
         )
-        .addStringOption((option) =>
+        .addIntegerOption((option) =>
           option
             .setName("event_number")
             .setDescription(
               "The number in the top left and bottom right hand corner"
             )
-            .setMaxLength(2)
         )
         .addAttachmentOption((option) =>
           option
@@ -132,13 +132,12 @@ module.exports = {
             .setRequired(true)
             .setMaxLength(16)
         )
-        .addStringOption((option) =>
+        .addIntegerOption((option) =>
           option
             .setName("event_number")
             .setDescription(
               "The number in the top left and bottom right hand corner"
             )
-            .setMaxLength(2)
         )
         .addAttachmentOption((option) =>
           option
@@ -209,13 +208,12 @@ module.exports = {
             .setDescription("The name of the person will be in Space #4")
             .setRequired(true)
         )
-        .addStringOption((option) =>
+        .addIntegerOption((option) =>
           option
             .setName("event_number")
             .setDescription(
               "The number in the top left and bottom right hand corner"
             )
-            .setMaxLength(2)
         )
         .addAttachmentOption((option) =>
           option
@@ -227,6 +225,8 @@ module.exports = {
     ),
 
   async execute(interaction) {
+  GlobalFonts.registerFromPath('./fonts/Minecraft.ttf', 'Minecraft');
+  GlobalFonts.registerFromPath('./fonts/Minecrafter.Reg.ttf', 'MinecrafterFont');
     await interaction.deferReply();
     try {
       if (interaction.options.getSubcommand() == "with_discord") {
@@ -286,7 +286,7 @@ module.exports = {
           }
           context.fillText(nickname, 377 * i - 54, 714);
           if (i == 1) {
-            context.font = `34px Minecrafter`;
+            context.font = `34px MinecrafterFont`;
             context.fillText(eventNumber.toString(), 113, 114);
             context.fillText(eventNumber.toString(), 1672, 894);
           }
@@ -374,7 +374,7 @@ module.exports = {
           }
           context.fillText(user, 377 * i - 54, 714);
           if (i == 1) {
-            context.font = `34px Minecrafter`;
+            context.font = `34px MinecrafterFont`;
             context.fillText(eventNumber.toString(), 113, 114);
             context.fillText(eventNumber.toString(), 1672, 894);
           }
@@ -467,7 +467,7 @@ module.exports = {
           }
           context.fillText(user, 377 * i - 54, 714);
           if (i == 1) {
-            context.font = `34px Minecrafter`;
+            context.font = `34px MinecrafterFont`;
             context.fillText(eventNumber.toString(), 113, 114);
             context.fillText(eventNumber.toString(), 1672, 894);
           }
