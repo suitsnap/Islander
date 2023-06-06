@@ -1,0 +1,17 @@
+{
+  "dependencies": {
+    "@discordjs/builders": "^1.6.3",
+    "@discordjs/rest": "^1.7.1",
+    "@napi-rs/canvas": "^0.1.41",
+    "@sapphire/shapeshift": "^3.9.0",
+    "axios": "^1.4.0",
+    "canvas": "^2.11.2",
+    "discord-api-types": "^0.37.42",
+    "discord.js": "^14.11.0",
+    "fs": "^0.0.1-security",
+    "isomorphic-fetch": "^3.0.0",
+    "jimp": "^0.22.8",
+    "node-fetch": "^3.3.1",
+    "path": "^0.12.7"
+  }
+}
