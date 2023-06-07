@@ -81,7 +81,10 @@ client.on("ready", () => {
       body: guildCommands,
     })
     .catch(console.error);
-  client.user.setActivity(ActivityType.Playing("MCC Island."));
+  client.user.setPresence({
+    activities: [{ name: `MCC Island Open Beta!`, type: ActivityType.Playing }],
+    status: "online",
+  });
   console.log(`Ready! Logged in as ${client.user.tag}`);
 });
 
@@ -188,5 +191,12 @@ client.on("interactionCreate", (buttonInteraction) => {
 
 client.login(token);
 (async () => {
-  await connect(databaseToken).catch(console.error);
+  await connect(databaseToken, {
+    keepAlive: true,
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  });
+  if (connect) {
+    console.log("Database is running!");
+  }
 })();

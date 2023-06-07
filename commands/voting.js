@@ -6,6 +6,8 @@ const {
 } = require("discord.js");
 const axios = require("axios");
 const Jimp = require("jimp");
+const pollSchema = require("../schemas/pollSchema");
+const mongoose = require("mongoose");
 
 module.exports = {
   //Create the vote command
@@ -85,6 +87,9 @@ module.exports = {
       pollEndTime.getTime() / 1000
     )}:R>`;
 
+    const generatedPollId = await generatePollId();
+    console.log(`Recieved generation: ${generatedPollId}`);
+
     //Create poll embed
     let pollEmbed = new EmbedBuilder()
       .setColor(guildIconColour)
@@ -93,6 +98,10 @@ module.exports = {
         name: `Details`,
         value: `Poll ends ${[pollEndTimeString]}`,
         inline: false,
+      })
+      .setFooter({
+        text: `Poll ID: ${generatedPollId} | Created by: ${interaction.user.username}`,
+        iconURl: interaction.user.iconURL,
       });
 
     //Create list of all the relevant reaction emojis for this vote
@@ -125,6 +134,15 @@ module.exports = {
     for (const reaction of reactionEmojis) {
       pollMessage.react(reaction);
     }
+
+    //Add to database in case of emergency (bot stops mid vote)
+    pollSchema.create({
+      pollId: generatedPollId,
+      messageId: pollMessage.id,
+      ownerId: interaction.user.id,
+      endUnix: pollEndTimeString,
+      active: true,
+    });
 
     //Begin timer to execute once the timer is over
     let durationOfVote = setTimeout(async () => {
@@ -397,12 +415,6 @@ async function generatePollBars(pollMessage, votingOptions) {
   return pollMessageString;
 }
 
-function sleep(ms) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-}
-
 function getBar(percentage) {
   let bar = "[";
   if (percentage === 0) {
@@ -417,4 +429,27 @@ function getBar(percentage) {
   }
   bar += "]";
   return bar;
+}
+
+async function generatePollId() {
+  const length = 10;
+  const list = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+  let generatedPollId = "";
+  const random = Math.random;
+
+  for (let i = 0; i < length; i++) {
+    const index = Math.floor(random() * list.length);
+    const randomChar = list.charAt(index);
+    generatedPollId += randomChar;
+  }
+
+  const data = await pollSchema.findOne({ pollId: generatedPollId });
+
+  if (!data) {
+    console.log(`Initial generation: ${generatedPollId}`);
+    return generatedPollId;
+  } else {
+    return generatePollId();
+  }
 }
