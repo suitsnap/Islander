@@ -88,7 +88,6 @@ module.exports = {
     )}:R>`;
 
     const generatedPollId = await generatePollId();
-    console.log(`Recieved generation: ${generatedPollId}`);
 
     //Create poll embed
     let pollEmbed = new EmbedBuilder()
@@ -447,7 +446,6 @@ async function generatePollId() {
   const data = await pollSchema.findOne({ pollId: generatedPollId });
 
   if (!data) {
-    console.log(`Initial generation: ${generatedPollId}`);
     return generatedPollId;
   } else {
     return generatePollId();

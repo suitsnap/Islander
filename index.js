@@ -189,6 +189,17 @@ client.on("interactionCreate", (buttonInteraction) => {
   }
 });
 
+const guildId = "1052015794395037776";
+const roleId = "1086084386790850630";
+
+client.on("guildMemberAdd", async (member) => {
+  if (member.guild.id === guildId) {
+    const guild = await client.guilds.fetch(guildId);
+    const role = guild.roles.cache.get(roleId);
+    member.roles.add(role);
+  }
+});
+
 client.login(token);
 (async () => {
   await connect(databaseToken, {
