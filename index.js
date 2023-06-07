@@ -9,7 +9,8 @@ const {
   ActivityType,
 } = require("discord.js");
 const { ActionRowBuilder } = require("@discordjs/builders");
-const { token, clientID, guildID } = require("./config.json");
+const { token, clientID, guildID, databaseToken } = require("./config.json");
+const { connect } = require("mongoose");
 const fs = require("fs");
 const { REST } = require("@discordjs/rest");
 const { Routes } = require("discord-api-types/v9");
@@ -186,3 +187,6 @@ client.on("interactionCreate", (buttonInteraction) => {
 });
 
 client.login(token);
+(async () => {
+  await connect(databaseToken).catch(console.error);
+})();
