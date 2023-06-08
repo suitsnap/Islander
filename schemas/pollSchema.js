@@ -5,6 +5,8 @@ let pollSchema = new Schema({
   messageId: String,
   ownerId: String,
   endUnix: String,
+  channelId: String,
+  votingOptions: [Boolean],
   active: Boolean,
 });
 
