@@ -139,7 +139,7 @@ module.exports = {
       pollId: generatedPollId,
       messageId: pollMessage.id,
       ownerId: interaction.user.id,
-      endUnix: pollEndTimeString,
+      endUnix: Math.floor(pollEndTime.getTime() / 1000),
       active: true,
     });
 
