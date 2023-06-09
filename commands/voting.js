@@ -4,8 +4,10 @@ const {
   Collection,
   PermissionFlagsBits,
 } = require("discord.js");
-const axios = require("axios");
-const Jimp = require("jimp");
+const pollSchema = require("../schemas/pollSchema");
+const { generatePollBars } = require("../globalFunctions/generatePollBars");
+const { getMostFrequentGuildIconColour } = require("../globalFunctions/getMostFrequentGuildIconColour");
+const mongoose = require("mongoose");
 
 module.exports = {
   //Create the vote command
@@ -85,6 +87,8 @@ module.exports = {
       pollEndTime.getTime() / 1000
     )}:R>`;
 
+    const generatedPollId = await generatePollId();
+
     //Create poll embed
     let pollEmbed = new EmbedBuilder()
       .setColor(guildIconColour)
@@ -93,6 +97,10 @@ module.exports = {
         name: `Details`,
         value: `Poll ends ${[pollEndTimeString]}`,
         inline: false,
+      })
+      .setFooter({
+        text: `Poll ID: ${generatedPollId} | Created by: ${interaction.user.username}`,
+        iconURl: interaction.user.iconURL,
       });
 
     //Create list of all the relevant reaction emojis for this vote
@@ -126,87 +134,16 @@ module.exports = {
       pollMessage.react(reaction);
     }
 
-    //Begin timer to execute once the timer is over
-    let durationOfVote = setTimeout(async () => {
-      const pollMessageString = await generatePollBars(
-        pollMessage,
-        votingOptions
-      );
-      pollEmbed.setDescription(pollMessageString);
-      await pollMessage.edit({ embeds: [pollEmbed] });
-
-      const reactions = await pollMessage.reactions.cache;
-      let totalReactions = 0;
-      let skyBattleVotes = 0;
-      let battleBoxVotes = 0;
-      let holeInWallVotes = 0;
-      let toGetToOtherSideVotes = 0;
-
-      // Count the number of reactions for each vote option
-      reactions.forEach((reaction) => {
-        const reactionCode = reaction.emoji.name;
-        if (reactionCode === "game_sb") {
-          skyBattleVotes = reaction.count - 1;
-        } else if (reactionCode === "game_bb") {
-          battleBoxVotes = reaction.count - 1;
-        } else if (reactionCode === "game_hitw") {
-          holeInWallVotes = reaction.count - 1;
-        } else if (reactionCode === "game_tgttos") {
-          toGetToOtherSideVotes = reaction.count - 1;
-        }
-        totalReactions += reaction.count - 1;
-      });
-
-      let winnerEmbed = new EmbedBuilder()
-        .setColor(guildIconColour)
-        .setTitle(
-          "<:mcc_crown:1112828436839407756>** Winner of the vote is:**"
-        );
-      let winner;
-
-      const games = [
-        {
-          name: "# Sky Battle",
-          votes: skyBattleVotes,
-          thumbnail:
-            "https://cdn.discordapp.com/emojis/1089592353645412482.webp?size=1024&quality=lossless",
-        },
-        {
-          name: "# Battle Box",
-          votes: battleBoxVotes,
-          thumbnail:
-            "https://cdn.discordapp.com/emojis/1089592675595984986.webp?size=1024&quality=lossless",
-        },
-        {
-          name: "# Hole In The Wall",
-          votes: holeInWallVotes,
-          thumbnail:
-            "https://cdn.discordapp.com/emojis/1089592541663469678.webp?size=1024&quality=lossless",
-        },
-        {
-          name: "# To Get To The Other Side",
-          votes: toGetToOtherSideVotes,
-          thumbnail:
-            "https://cdn.discordapp.com/emojis/1089592804696653906.webp?size=1024&quality=lossless",
-        },
-      ];
-
-      games.sort((a, b) => b.votes - a.votes);
-
-      if (games[0].votes > games[1].votes) {
-        winner = games[0].name;
-        winnerEmbed.setThumbnail(games[0].thumbnail);
-      } else {
-        winner = "More than one game.";
-      }
-
-      winnerEmbed.setDescription(
-        `# **  ${winner}  **\n<:star:1094418485951615027>** Total votes cast:**  ${totalReactions}`
-      );
-      await interaction.channel.send({ embeds: [winnerEmbed] });
-      timedOut = true;
-      clearTimeout(durationOfVote);
-    }, durationInMillis);
+    //Add to database in case of emergency (bot stops mid vote)
+    pollSchema.create({
+      pollId: generatedPollId,
+      messageId: pollMessage.id,
+      ownerId: interaction.user.id,
+      endUnix: Math.floor(pollEndTime.getTime() / 1000),
+      channelId: interaction.channel.id,
+      votingOptions: votingOptions,
+      active: true,
+    });
 
     //Reaction listener for reaction adds
     interaction.client.on("messageReactionAdd", async (reaction, user) => {
@@ -287,134 +224,25 @@ module.exports = {
   },
 };
 
-async function getMostFrequentGuildIconColour(guild, stepSize = 1) {
-  const iconURL = guild.iconURL({ extension: "png" });
-  if (!iconURL) return null;
 
-  const response = await axios.get(iconURL, {
-    responseType: "arraybuffer",
-  });
-  const buffer = Buffer.from(response.data, "binary");
+async function generatePollId() {
+  const length = 10;
+  const list = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
-  const image = await Jimp.read(buffer);
-  const pixelCounts = {};
+  let generatedPollId = "";
+  const random = Math.random;
 
-  for (let y = 0; y < image.getHeight(); y += stepSize) {
-    for (let x = 0; x < image.getWidth(); x += stepSize) {
-      const { r, g, b } = Jimp.intToRGBA(image.getPixelColor(x, y));
-      const colorHex = rgbToHex(r, g, b);
-
-      if (!pixelCounts[colorHex]) {
-        pixelCounts[colorHex] = 0;
-      }
-
-      pixelCounts[colorHex]++;
-    }
+  for (let i = 0; i < length; i++) {
+    const index = Math.floor(random() * list.length);
+    const randomChar = list.charAt(index);
+    generatedPollId += randomChar;
   }
 
-  const mostFrequentColor = Object.keys(pixelCounts).reduce((a, b) =>
-    pixelCounts[a] > pixelCounts[b] ? a : b
-  );
+  const data = await pollSchema.findOne({ pollId: generatedPollId });
 
-  return mostFrequentColor;
-}
-
-function rgbToHex(r, g, b) {
-  return "#" + ((r << 16) | (g << 8) | b).toString(16).padStart(6, "0");
-}
-
-async function generatePollBars(pollMessage, votingOptions) {
-  const reactions = await pollMessage.reactions.cache;
-  let totalReactions = 0;
-  let skyBattleVotes = 0;
-  let battleBoxVotes = 0;
-  let holeInWallVotes = 0;
-  let toGetToOtherSideVotes = 0;
-
-  // Count the number of reactions for each vote option
-  reactions.forEach((reaction) => {
-    const reactionCode = reaction.emoji.name;
-    if (reactionCode === "game_sb") {
-      skyBattleVotes = reaction.count - 1;
-    } else if (reactionCode === "game_bb") {
-      battleBoxVotes = reaction.count - 1;
-    } else if (reactionCode === "game_hitw") {
-      holeInWallVotes = reaction.count - 1;
-    } else if (reactionCode === "game_tgttos") {
-      toGetToOtherSideVotes = reaction.count - 1;
-    }
-    totalReactions += reaction.count - 1;
-  });
-
-  // Calculate the percentage of votes for each vote option
-  let skyBattlePercentage = 0;
-  let battleBoxPercentage = 0;
-  let holeInWallPercentage = 0;
-  let toGetToOtherSidePercentage = 0;
-
-  if (totalReactions > 0) {
-    skyBattlePercentage =
-      Math.round(
-        ((skyBattleVotes * 100) / totalReactions + Number.EPSILON) * 100
-      ) / 100;
-    battleBoxPercentage =
-      Math.round(
-        ((battleBoxVotes * 100) / totalReactions + Number.EPSILON) * 100
-      ) / 100;
-    holeInWallPercentage =
-      Math.round(
-        ((holeInWallVotes * 100) / totalReactions + Number.EPSILON) * 100
-      ) / 100;
-    toGetToOtherSidePercentage =
-      Math.round(
-        ((toGetToOtherSideVotes * 100) / totalReactions + Number.EPSILON) * 100
-      ) / 100;
-  }
-
-  // Update the poll message with the new vote counts and percentages
-  let pollMessageString = " ";
-  if (votingOptions[0]) {
-    pollMessageString += `**Sky Battle**  <:game_sb:1089592353645412482> ${getBar(
-      skyBattlePercentage
-    )} [ ${skyBattlePercentage}% • ${skyBattleVotes} ]\n\n`;
-  }
-  if (votingOptions[1]) {
-    pollMessageString += `**Battle Box**  <:game_bb:1089592675595984986> ${getBar(
-      battleBoxPercentage
-    )} [ ${battleBoxPercentage}% • ${battleBoxVotes} ]\n\n`;
-  }
-  if (votingOptions[2]) {
-    pollMessageString += `**Hole In Wall**  <:game_hitw:1089592541663469678> ${getBar(
-      holeInWallPercentage
-    )} [ ${holeInWallPercentage}% • ${holeInWallVotes} ]\n\n`;
-  }
-  if (votingOptions[3]) {
-    pollMessageString += `**To Get To The Other Side**  <:game_tgttos:1089592804696653906> ${getBar(
-      toGetToOtherSidePercentage
-    )} [ ${toGetToOtherSidePercentage}% • ${toGetToOtherSideVotes} ]\n\n`;
-  }
-  pollMessageString += `Total Votes: ${totalReactions}`;
-  return pollMessageString;
-}
-
-function sleep(ms) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-}
-
-function getBar(percentage) {
-  let bar = "[";
-  if (percentage === 0) {
-    bar += "░░░░░░░░░░";
-  } else if (percentage % 10 === 0) {
-    bar += "▓".repeat(percentage / 10);
-    bar += "░".repeat(10 - percentage / 10);
+  if (!data) {
+    return generatedPollId;
   } else {
-    bar += "▓".repeat(Math.floor(percentage / 10));
-    bar += "▒";
-    bar += "░".repeat(9 - Math.floor(percentage / 10));
+    return generatePollId();
   }
-  bar += "]";
-  return bar;
 }

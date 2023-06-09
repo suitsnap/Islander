@@ -9,11 +9,14 @@ const {
   ActivityType,
 } = require("discord.js");
 const { ActionRowBuilder } = require("@discordjs/builders");
-const { token, clientID, guildID } = require("./config.json");
+const { token, clientID, guildID, databaseToken } = require("./config.json");
+const { connect } = require("mongoose");
 const fs = require("fs");
 const { REST } = require("@discordjs/rest");
 const { Routes } = require("discord-api-types/v9");
 const path = require("path");
+var cron = require("node-cron");
+
 
 const client = new Client({
   intents: [
@@ -62,6 +65,20 @@ for (const file of guildCommandFiles) {
   guildCommands.push(command.data.toJSON());
 }
 
+getCommands("./ScheduledEvents", (command) => {
+    cron.schedule(command.data.interval, () => {
+      command.execute(client);
+    });
+  });
+function getCommands(dir, callback) {
+    const files = fs.readdirSync(dir).filter(file => file.endsWith(".js"));
+  
+    for (const file of files) {
+      const command = require(`${dir}/${file}`);
+      callback(command);
+    }
+  }
+
 client.on("ready", () => {
   const rest = new REST({ version: "9" }).setToken(token);
 
@@ -80,7 +97,10 @@ client.on("ready", () => {
       body: guildCommands,
     })
     .catch(console.error);
-  client.user.setActivity(ActivityType.Playing("MCC Island."));
+  client.user.setPresence({
+    activities: [{ name: `MCC Island Open Beta!`, type: ActivityType.Playing }],
+    status: "online",
+  });
   console.log(`Ready! Logged in as ${client.user.tag}`);
 });
 
@@ -185,4 +205,25 @@ client.on("interactionCreate", (buttonInteraction) => {
   }
 });
 
+const guildId = "1052015794395037776";
+const roleId = "1086084386790850630";
+
+client.on("guildMemberAdd", async (member) => {
+  if (member.guild.id === guildId) {
+    const guild = await client.guilds.fetch(guildId);
+    const role = guild.roles.cache.get(roleId);
+    member.roles.add(role);
+  }
+});
+
 client.login(token);
+(async () => {
+  await connect(databaseToken, {
+    keepAlive: true,
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  });
+  if (connect) {
+    console.log("Database is running!");
+  }
+})();
