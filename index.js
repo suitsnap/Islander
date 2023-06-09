@@ -17,7 +17,6 @@ const { Routes } = require("discord-api-types/v9");
 const path = require("path");
 var cron = require("node-cron");
 
-
 const client = new Client({
   intents: [
     GatewayIntentBits.GuildMessages,
@@ -66,18 +65,19 @@ for (const file of guildCommandFiles) {
 }
 
 getCommands("./ScheduledEvents", (command) => {
-    cron.schedule(command.data.interval, () => {
-      command.execute(client);
-    });
+  cron.schedule(command.data.interval, () => {
+    command.execute(client);
   });
+});
+
 function getCommands(dir, callback) {
-    const files = fs.readdirSync(dir).filter(file => file.endsWith(".js"));
-  
-    for (const file of files) {
-      const command = require(`${dir}/${file}`);
-      callback(command);
-    }
+  const files = fs.readdirSync(dir).filter((file) => file.endsWith(".js"));
+
+  for (const file of files) {
+    const command = require(`${dir}/${file}`);
+    callback(command);
   }
+}
 
 client.on("ready", () => {
   const rest = new REST({ version: "9" }).setToken(token);
