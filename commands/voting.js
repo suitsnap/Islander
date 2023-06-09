@@ -8,6 +8,7 @@ const axios = require("axios");
 const Jimp = require("jimp");
 const pollSchema = require("../schemas/pollSchema");
 const { generatePollBars } = require("../globalFunctions/generatePollBars");
+const { getMostFrequentGuildIconColour } = require("../globalFunctions/getMostFrequentGuildIconColour");
 const mongoose = require("mongoose");
 
 module.exports = {
