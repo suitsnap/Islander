@@ -1,12 +1,14 @@
 const { EmbedBuilder } = require("discord.js");
 const pollSchema = require("../schemas/pollSchema");
-const { generatePollBars } = require("../globalFunctions/generatePollBars")
-const { getMostFrequentGuildIconColour } = require("../globalFunctions/getMostFrequentGuildIconColour")
+const { generatePollBars } = require("../globalFunctions/generatePollBars");
+const {
+  getMostFrequentGuildIconColour,
+} = require("../globalFunctions/getMostFrequentGuildIconColour");
 const mongoose = require("mongoose");
 
 module.exports = {
   data: {
-    interval: "15 * * * * *",
+    interval: "*/15 * * * * *",
   },
   async execute(client) {
     const polls = await checkEndedPolls();
@@ -15,9 +17,11 @@ module.exports = {
       const votingOptions = poll.votingOptions;
       const pollMessageChannel = await client.channels.fetch(poll.channelId);
       const pollMessage = await pollMessageChannel.messages.fetch(messageId);
-      const guildIconColour = await getMostFrequentGuildIconColour(pollMessageChannel.guild.id);
-      const pollEmbed = pollMessage.embeds[0];
-      
+      const guildIconColour = await getMostFrequentGuildIconColour(
+        pollMessageChannel.guild
+      );
+      const pollEmbed = EmbedBuilder.from(pollMessage.embeds[0]);
+
       const pollMessageString = await generatePollBars(
         pollMessage,
         votingOptions
@@ -94,8 +98,8 @@ module.exports = {
         `# **  ${winner}  **\n<:star:1094418485951615027>** Total votes cast:**  ${totalReactions}`
       );
       await pollMessageChannel.send({ embeds: [winnerEmbed] });
-    
-      
+      poll.active = false;
+      await poll.save();
     }
   },
 };
@@ -107,7 +111,6 @@ async function checkEndedPolls() {
       active: true,
       endUnix: { $lt: currentTime },
     });
-    console.log(activePolls);
     return activePolls;
   } catch (error) {
     const currentTime = new Date();

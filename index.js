@@ -65,7 +65,7 @@ for (const file of guildCommandFiles) {
   guildCommands.push(command.data.toJSON());
 }
 
-getCommands("./ScheduledCommands", (command) => {
+getCommands("./ScheduledEvents", (command) => {
     cron.schedule(command.data.interval, () => {
       command.execute(client);
     });

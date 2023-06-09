@@ -1,3 +1,8 @@
+
+const axios = require("axios");
+const Jimp = require("jimp");
+
+
 async function getMostFrequentGuildIconColour(guild, stepSize = 1) {
   const iconURL = guild.iconURL({ extension: "png" });
   if (!iconURL) return null;

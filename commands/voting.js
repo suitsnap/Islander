@@ -4,8 +4,6 @@ const {
   Collection,
   PermissionFlagsBits,
 } = require("discord.js");
-const axios = require("axios");
-const Jimp = require("jimp");
 const pollSchema = require("../schemas/pollSchema");
 const { generatePollBars } = require("../globalFunctions/generatePollBars");
 const { getMostFrequentGuildIconColour } = require("../globalFunctions/getMostFrequentGuildIconColour");
