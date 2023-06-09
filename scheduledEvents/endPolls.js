@@ -12,6 +12,9 @@ module.exports = {
       const messageId = poll.messageId;
       const pollMessageChannel = await client.channels.fetch(poll.channelId);
       const pollMessage = await pollMessageChannel.messages.fetch(messageId);
+      const pollEmbed = pollMessage.embeds[0];
+      
+      
     }
   },
 };
