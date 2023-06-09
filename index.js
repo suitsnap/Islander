@@ -63,6 +63,20 @@ for (const file of guildCommandFiles) {
   guildCommands.push(command.data.toJSON());
 }
 
+getCommands("./ScheduledCommands", (command) => {
+    cron.schedule(command.data.interval, () => {
+      command.execute(client);
+    });
+  });
+function getCommands(dir, callback) {
+    const files = fs.readdirSync(dir).filter(file => file.endsWith(".js"));
+  
+    for (const file of files) {
+      const command = require(`${dir}/${file}`);
+      callback(command);
+    }
+  }
+
 client.on("ready", () => {
   const rest = new REST({ version: "9" }).setToken(token);
 
