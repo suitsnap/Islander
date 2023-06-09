@@ -6,7 +6,9 @@ const {
 } = require("discord.js");
 const pollSchema = require("../schemas/pollSchema");
 const { generatePollBars } = require("../globalFunctions/generatePollBars");
-const { getMostFrequentGuildIconColour } = require("../globalFunctions/getMostFrequentGuildIconColour");
+const {
+  getMostFrequentGuildIconColour,
+} = require("../globalFunctions/getMostFrequentGuildIconColour");
 const mongoose = require("mongoose");
 
 module.exports = {
@@ -86,8 +88,10 @@ module.exports = {
     const pollEndTimeString = `<t:${Math.floor(
       pollEndTime.getTime() / 1000
     )}:R>`;
-
     const generatedPollId = await generatePollId();
+    if (generatedPollId == "Error generating poll ID.") {
+      await interaction.reply(generatedPollId);
+    }
 
     //Create poll embed
     let pollEmbed = new EmbedBuilder()
@@ -126,6 +130,7 @@ module.exports = {
       pollMessage,
       votingOptions
     );
+
     pollEmbed.setDescription(pollMessageString);
     await pollMessage.edit({ embeds: [pollEmbed] });
 
@@ -151,6 +156,9 @@ module.exports = {
       if (reaction.message.partial) await reaction.message.fetch();
       if (reaction.partial) await reaction.fetch();
 
+      // Get database value for this poll
+      const currentPoll = await pollSchema.findOne({ pollId: generatedPollId });
+
       /*Check if:
       the reactor is not a bot,
       if the reaction is in a DM,
@@ -160,7 +168,8 @@ module.exports = {
         user.bot ||
         !reaction.message.guild ||
         pollMessage.id != reaction.message.id ||
-        timedOut
+        timedOut ||
+        !currentPoll.active
       )
         return;
 
@@ -200,11 +209,15 @@ module.exports = {
     interaction.client.on("messageReactionRemove", async (reaction, user) => {
       if (reaction.message.partial) await reaction.message.fetch();
       if (reaction.partial) await reaction.fetch();
+
+      const currentPoll = await pollSchema.findOne({ pollId: generatedPollId });
+
       if (
         user.bot ||
         !reaction.message.guild ||
         pollMessage.id != reaction.message.id ||
-        timedOut
+        timedOut ||
+        !currentPoll.active
       )
         return;
 
@@ -224,7 +237,6 @@ module.exports = {
   },
 };
 
-
 async function generatePollId() {
   const length = 10;
   const list = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -243,6 +255,10 @@ async function generatePollId() {
   if (!data) {
     return generatedPollId;
   } else {
-    return generatePollId();
+    try {
+      return generatePollId();
+    } catch (error) {
+      return "Error generating poll ID.";
+    }
   }
 }
