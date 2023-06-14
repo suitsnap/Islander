@@ -145,7 +145,7 @@ module.exports = {
         const user = interaction.options.getUser("user");
         const formatOfPhoto =
           interaction.options.getString("image_format_solo") || "png";
-        await processAvatar(interaction, user, formatOfPhoto);
+        await processAvatar(interaction, user, formatOfPhoto, regex);
       } else if (subcommand === "quad") {
         const userArray = [
           interaction.options.getUser("user_one"),
@@ -155,12 +155,12 @@ module.exports = {
         ];
         const formatOfPhoto =
           interaction.options.getString("image_format_quad") || "png";
-        await processAvatarGroup(interaction, userArray, formatOfPhoto);
+        await processAvatarGroup(interaction, userArray, formatOfPhoto, regex);
       }
     } else if (subcommandGroup === "minecraft") {
       if (subcommand === "single") {
         const player = interaction.options.getString("player");
-        await processMinecraftAvatar(interaction, player);
+        await processMinecraftAvatar(interaction, player, regex);
       } else if (subcommand === "quad") {
         const playerArray = [
           interaction.options.getString("player_one"),
@@ -168,13 +168,13 @@ module.exports = {
           interaction.options.getString("player_three"),
           interaction.options.getString("player_four"),
         ];
-        await processMinecraftAvatarGroup(interaction, playerArray);
+        await processMinecraftAvatarGroup(interaction, playerArray, regex);
       }
     }
   },
 };
 
-async function processAvatar(interaction, user, formatOfPhoto) {
+async function processAvatar(interaction, user, formatOfPhoto, regex) {
   if (!user.avatar) {
     return interaction.reply("User does not have an avatar.");
   }
@@ -207,7 +207,7 @@ async function processAvatar(interaction, user, formatOfPhoto) {
   }
 }
 
-async function processAvatarGroup(interaction, userArray, formatOfPhoto) {
+async function processAvatarGroup(interaction, userArray, formatOfPhoto, regex) {
   const attachmentList = [];
   let edgeCaseMessage = "";
 
@@ -238,7 +238,7 @@ async function processAvatarGroup(interaction, userArray, formatOfPhoto) {
   interaction.reply({ content: edgeCaseMessage, files: attachmentList });
 }
 
-async function processMinecraftAvatar(interaction, player) {
+async function processMinecraftAvatar(interaction, player, regex) {
   const avatarUrl = `https://mc-heads.net/avatar/${player}/4096`;
 
   try {
@@ -263,7 +263,7 @@ async function processMinecraftAvatar(interaction, player) {
   }
 }
 
-async function processMinecraftAvatarGroup(interaction, playerArray) {
+async function processMinecraftAvatarGroup(interaction, playerArray, regex) {
   const attachmentList = [];
 
   for (const player of playerArray) {
