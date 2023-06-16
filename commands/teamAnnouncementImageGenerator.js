@@ -1,6 +1,5 @@
 const { SlashCommandBuilder, AttachmentBuilder } = require("discord.js");
-const { createCanvas, loadImage, GlobalFonts} = require("@napi-rs/canvas");
-
+const { createCanvas, loadImage, GlobalFonts } = require("@napi-rs/canvas");
 
 module.exports = {
   // Create Slash Command for Team Images
@@ -225,8 +224,11 @@ module.exports = {
     ),
 
   async execute(interaction) {
-  GlobalFonts.registerFromPath('./fonts/Minecraft.ttf', 'Minecraft');
-  GlobalFonts.registerFromPath('./fonts/Minecrafter.Reg.ttf', 'MinecrafterFont');
+    GlobalFonts.registerFromPath("./fonts/Minecraft.ttf", "Minecraft");
+    GlobalFonts.registerFromPath(
+      "./fonts/Minecrafter.Reg.ttf",
+      "MinecrafterFont"
+    );
     await interaction.deferReply();
     try {
       if (interaction.options.getSubcommand() == "with_discord") {
@@ -293,8 +295,7 @@ module.exports = {
           i++;
         }
 
-        const recievedEmblem =
-          interaction.options.getAttachment("emblem");
+        const recievedEmblem = interaction.options.getAttachment("emblem");
 
         if (recievedEmblem != null) {
           const targetWidth = 465;
@@ -381,8 +382,7 @@ module.exports = {
           i++;
         }
 
-        const recievedEmblem =
-          interaction.options.getAttachment("emblem");
+        const recievedEmblem = interaction.options.getAttachment("emblem");
 
         if (recievedEmblem != null) {
           const targetWidth = 465;
@@ -473,8 +473,7 @@ module.exports = {
           }
           i++;
         }
-        const recievedEmblem =
-          interaction.options.getAttachment("emblem");
+        const recievedEmblem = interaction.options.getAttachment("emblem");
 
         if (recievedEmblem != null) {
           const targetWidth = 465;
