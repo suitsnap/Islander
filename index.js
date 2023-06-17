@@ -23,8 +23,32 @@ const client = new Client({
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessageReactions,
     GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildVoiceStates,
   ],
 });
+
+const statusOptions = [
+  ["To Get to the Other Side", ActivityType.Playing],
+  ["Hole in the Wall", ActivityType.Playing],
+  ["Battle Box", ActivityType.Playing],
+  ["Sky Battle", ActivityType.Playing],
+  ["Parkour Warrior: Solo", ActivityType.Playing],
+  ["play.mccisland.net", ActivityType.Playing],
+  ["MCC Island Speedruns", ActivityType.Watching],
+  ["Admin Streams", ActivityType.Streaming],
+  ["IW Tournaments", ActivityType.Competing],
+];
+let statusIndex = 0;
+
+function updateStatus() {
+  const newStatus = statusOptions[statusIndex];
+  client.user.setPresence({
+    activities: [{ name: newStatus[0], type: newStatus[1] }],
+    status: "online",
+  });
+  statusIndex = (statusIndex + 1) % statusOptions.length;
+}
 
 const commands = [];
 client.commands = new Collection();
@@ -99,10 +123,8 @@ client.on("ready", () => {
       body: guildCommands,
     })
     .catch(console.error);
-  client.user.setPresence({
-    activities: [{ name: `MCC Island Open Beta!`, type: ActivityType.Playing }],
-    status: "online",
-  });
+  updateStatus();
+  setInterval(updateStatus, 15000);
   console.log(`Ready! Logged in as ${client.user.tag}`);
 });
 
@@ -210,10 +232,11 @@ client.on("interactionCreate", (buttonInteraction) => {
 const guildId = "1052015794395037776";
 const roleId = "1086084386790850630";
 
-client.on("guildMemberAdd", async (member) => {
+client.on("guildMemberAdd", (member) => {
+  console.log("Hi");
   if (member.guild.id === guildId) {
-    const guild = await client.guilds.fetch(guildId);
-    const role = guild.roles.cache.get(roleId);
+    console.log("Hi but different");
+    const role = member.guild.roles.cache.get(roleId);
     member.roles.add(role);
   }
 });
