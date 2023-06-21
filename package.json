@@ -6,6 +6,7 @@
     "@sapphire/shapeshift": "^3.9.0",
     "axios": "^1.4.0",
     "canvas": "^2.11.2",
+    "chalk": "^5.2.0",
     "discord-api-types": "^0.37.42",
     "discord.js": "^14.11.0",
     "fs": "^0.0.1-security",
@@ -15,6 +16,7 @@
     "mongoose": "^7.2.2",
     "node-cron": "^3.0.2",
     "node-fetch": "^3.3.1",
-    "path": "^0.12.7"
+    "path": "^0.12.7",
+    "pino": "^7.0.0-rc.9"
   }
 }

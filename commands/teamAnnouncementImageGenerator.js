@@ -1,4 +1,8 @@
-const { SlashCommandBuilder, AttachmentBuilder } = require("discord.js");
+const {
+  SlashCommandBuilder,
+  AttachmentBuilder,
+  PermissionFlagsBits,
+} = require("discord.js");
 const { createCanvas, loadImage, GlobalFonts } = require("@napi-rs/canvas");
 
 module.exports = {
@@ -6,6 +10,8 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName("generate_team")
     .setDescription("Returns a 'Team Announcement' images as seen in MCC")
+    .setDMPermission(false)
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     // Subcommand for creating the team images using Discord avatars
     .addSubcommand((subcommand) =>
       subcommand

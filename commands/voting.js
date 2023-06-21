@@ -16,6 +16,8 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName(`begin_vote`)
     .setDescription(`Begins the voting for which game you wish to play next!`)
+    .setDMPermission(false)
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .addStringOption((option) =>
       option
         .setName(`title`)

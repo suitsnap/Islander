@@ -2,13 +2,9 @@ const {
   Client,
   GatewayIntentBits,
   Collection,
-  ButtonBuilder,
-  ChannelType,
-  PermissionFlagsBits,
-  Activity,
   ActivityType,
 } = require("discord.js");
-const { ActionRowBuilder } = require("@discordjs/builders");
+const { ticketButton } = require("./events/ticketButton");
 const { token, clientID, guildID, databaseToken } = require("./config.json");
 const { connect } = require("mongoose");
 const fs = require("fs");
@@ -16,6 +12,10 @@ const { REST } = require("@discordjs/rest");
 const { Routes } = require("discord-api-types/v9");
 const path = require("path");
 var cron = require("node-cron");
+
+const reset = "\x1b[0m";
+const red = "\x1b[31m";
+const green = "\x1b[32m";
 
 const client = new Client({
   intents: [
@@ -37,6 +37,7 @@ const statusOptions = [
   ["play.mccisland.net", ActivityType.Playing],
   ["MCC Island Speedruns", ActivityType.Watching],
   ["Admin Streams", ActivityType.Streaming],
+  ["the MCC Soundtrack", ActivityType.Listening],
   ["IW Tournaments", ActivityType.Competing],
 ];
 let statusIndex = 0;
@@ -128,6 +129,28 @@ client.on("ready", () => {
   console.log(`Ready! Logged in as ${client.user.tag}`);
 });
 
+process.on("unhandledRejection", async (reason, promise) => {
+  console.log(
+    red + "ERROR - Unhandled Rejection" + reset,
+    `Reason: ${reason}\nPromise: ${promise}`
+  );
+});
+
+process.on("uncaughtException", (err) => {
+  console.log(red + "ERROR - Uncaught Exception" + reset, `Error: ${err}`);
+});
+
+process.on("uncaughtExceptionMonitor", (err, origin) => {
+  console.log(
+    red + "ERROR - Uncaught Exception Monitor" + reset,
+    `Error: ${err}\nOrigin: ${origin}`
+  );
+});
+
+client.on("error", (err) => {
+  console.log(red + "ERROR - Discord.js Error" + reset, `Error: ${err}`);
+});
+
 client.on("guildCreate", (guild) => {
   const rest = new REST({ version: "9" }).setToken(token);
 
@@ -147,7 +170,7 @@ client.on("interactionCreate", async (interaction) => {
   try {
     await command.execute(interaction);
   } catch (error) {
-    console.error(error);
+    console.log(red + "ERROR - Discord.js Error" + reset, `Error: ${error}`);
     await interaction.reply({
       content: "There was an error executing this command",
     });
@@ -157,64 +180,7 @@ client.on("interactionCreate", async (interaction) => {
 client.on("interactionCreate", (buttonInteraction) => {
   if (buttonInteraction.isButton()) {
     if (buttonInteraction.customId === "ticket-button") {
-      buttonInteraction.deferReply({ ephemeral: true });
-      const category = buttonInteraction.client.channels.cache.get(
-        "1054887073884151898"
-      );
-      const channelName =
-        "ticket-" + buttonInteraction.user.username.toLowerCase();
-      buttonInteraction.guild.channels
-        .create({
-          name: channelName,
-          type: ChannelType.GuildText,
-          parent: category,
-          permissionOverwrites: [
-            {
-              id: buttonInteraction.guild.id,
-              deny: PermissionFlagsBits.ViewChannel,
-            },
-            {
-              id: "1105256862670127196",
-              allow: [
-                PermissionFlagsBits.ViewChannel,
-                PermissionFlagsBits.SendMessages,
-              ],
-            },
-            {
-              id: buttonInteraction.member,
-              allow: [
-                PermissionFlagsBits.ViewChannel,
-                PermissionFlagsBits.SendMessages,
-              ],
-            },
-          ],
-        })
-        .then((textChannel) => {
-          const channelID = textChannel.id;
-          buttonInteraction.followUp(
-            "Ticket created! Please go to: " + `<#${channelID}>`
-          );
-          setTimeout(() => {
-            const closeButton = new ButtonBuilder()
-              .setStyle(4)
-              .setLabel("\uD83D\uDD12 Close ticket")
-              .setCustomId("close-button");
-            const pingButton = new ButtonBuilder()
-              .setStyle(2)
-              .setLabel("Ping staff")
-              .setEmoji("1115052247626305636")
-              .setCustomId("ping-button");
-
-            const row = new ActionRowBuilder().addComponents(
-              closeButton,
-              pingButton
-            );
-            textChannel.send({
-              content: `Hi there, ${buttonInteraction.user.toString()}, welcome to your ticket! Here, staff can provide any necessary information or help! Once you are ready to close the ticket, just press the button below!`,
-              components: [row],
-            });
-          }, 500);
-        });
+      ticketButton(buttonInteraction);
     }
     if (buttonInteraction.customId === "close-button") {
       buttonInteraction.channel.delete();
@@ -233,9 +199,7 @@ const guildId = "1052015794395037776";
 const roleId = "1086084386790850630";
 
 client.on("guildMemberAdd", (member) => {
-  console.log("Hi");
   if (member.guild.id === guildId) {
-    console.log("Hi but different");
     const role = member.guild.roles.cache.get(roleId);
     member.roles.add(role);
   }

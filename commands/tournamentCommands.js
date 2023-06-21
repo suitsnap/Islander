@@ -1,5 +1,4 @@
-const { SlashCommandBuilder } = require("discord.js");
-const { execute } = require("./teamAnnouncementImageGenerator");
+const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -7,6 +6,8 @@ module.exports = {
     .setDescription(
       "A group of commands relating to general tournament management."
     )
+    .setDMPermission(false)
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .addSubcommand((subcommand) =>
       subcommand
         .setName("substitute")
@@ -142,7 +143,9 @@ module.exports = {
           interaction.options.getUser("player_four"),
         ];
         let messageForBase = `Added Role -  ${tournamentRoleForTeam.name} to Members:\n`;
-        let messageForExtra = `Also added Role - ${extraTournamentRoleForTeam?.name ?? "blank"} to Members:\n`;
+        let messageForExtra = `Also added Role - ${
+          extraTournamentRoleForTeam?.name ?? "blank"
+        } to Members:\n`;
         for (const user of userArray) {
           const member = await interaction.guild.members.fetch(user.id);
           await member.roles.add(tournamentRoleForTeam);

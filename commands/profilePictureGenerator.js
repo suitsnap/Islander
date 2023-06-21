@@ -2,6 +2,7 @@ const { SlashCommandBuilder } = require("@discordjs/builders");
 const Discord = require("discord.js");
 const { createCanvas, loadImage } = require("@napi-rs/canvas");
 const fetch = require("isomorphic-fetch");
+const PermissionFlagsBits = require("discord.js");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -9,6 +10,8 @@ module.exports = {
     .setDescription(
       "Gets a downloadable version of one or four people's icons."
     )
+    .setDMPermission(false)
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .addSubcommandGroup((group) =>
       group
         .setName("minecraft")
@@ -207,7 +210,12 @@ async function processAvatar(interaction, user, formatOfPhoto, regex) {
   }
 }
 
-async function processAvatarGroup(interaction, userArray, formatOfPhoto, regex) {
+async function processAvatarGroup(
+  interaction,
+  userArray,
+  formatOfPhoto,
+  regex
+) {
   const attachmentList = [];
   let edgeCaseMessage = "";
 
