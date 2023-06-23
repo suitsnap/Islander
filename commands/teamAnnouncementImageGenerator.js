@@ -7,6 +7,7 @@ const { createCanvas, loadImage, GlobalFonts } = require("@napi-rs/canvas");
 
 module.exports = {
   // Create Slash Command for Team Images
+  cooldown: 10,
   data: new SlashCommandBuilder()
     .setName("generate_team")
     .setDescription("Returns a 'Team Announcement' images as seen in MCC")

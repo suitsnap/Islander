@@ -11,13 +11,13 @@ async function generatePollBars(pollMessage, votingOptions) {
   // Count the number of reactions for each vote option
   reactions.forEach((reaction) => {
     const reactionCode = reaction.emoji.name;
-    if (reactionCode === "game_sb") {
+    if (reactionCode === "gameSB") {
       skyBattleVotes = reaction.count - 1;
-    } else if (reactionCode === "game_bb") {
+    } else if (reactionCode === "gameBB") {
       battleBoxVotes = reaction.count - 1;
-    } else if (reactionCode === "game_hitw") {
+    } else if (reactionCode === "gameHITW") {
       holeInWallVotes = reaction.count - 1;
-    } else if (reactionCode === "game_tgttos") {
+    } else if (reactionCode === "gameTGTTOS") {
       toGetToOtherSideVotes = reaction.count - 1;
     }
     totalReactions += reaction.count - 1;
@@ -51,22 +51,22 @@ async function generatePollBars(pollMessage, votingOptions) {
   // Update the poll message with the new vote counts and percentages
   let pollMessageString = " ";
   if (votingOptions[0]) {
-    pollMessageString += `**Sky Battle**  <:game_sb:1089592353645412482> ${getBar(
+    pollMessageString += `**Sky Battle**  <:gameSB:1089592353645412482> ${getBar(
       skyBattlePercentage
     )} [ ${skyBattlePercentage}% • ${skyBattleVotes} ]\n\n`;
   }
   if (votingOptions[1]) {
-    pollMessageString += `**Battle Box**  <:game_bb:1089592675595984986> ${getBar(
+    pollMessageString += `**Battle Box**  <:gameBB:1089592675595984986> ${getBar(
       battleBoxPercentage
     )} [ ${battleBoxPercentage}% • ${battleBoxVotes} ]\n\n`;
   }
   if (votingOptions[2]) {
-    pollMessageString += `**Hole In Wall**  <:game_hitw:1089592541663469678> ${getBar(
+    pollMessageString += `**Hole In Wall**  <:gameHITW:1089592541663469678> ${getBar(
       holeInWallPercentage
     )} [ ${holeInWallPercentage}% • ${holeInWallVotes} ]\n\n`;
   }
   if (votingOptions[3]) {
-    pollMessageString += `**To Get To The Other Side**  <:game_tgttos:1089592804696653906> ${getBar(
+    pollMessageString += `**To Get To The Other Side**  <:gameTGTTOS:1089592804696653906> ${getBar(
       toGetToOtherSidePercentage
     )} [ ${toGetToOtherSidePercentage}% • ${toGetToOtherSideVotes} ]\n\n`;
   }

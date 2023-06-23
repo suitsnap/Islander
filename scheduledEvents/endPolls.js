@@ -1,10 +1,12 @@
-const { EmbedBuilder } = require("discord.js");
+const { EmbedBuilder, Attachment } = require("discord.js");
 const pollSchema = require("../schemas/pollSchema");
 const { generatePollBars } = require("../globalFunctions/generatePollBars");
 const {
   getMostFrequentGuildIconColour,
 } = require("../globalFunctions/getMostFrequentGuildIconColour");
-const mongoose = require("mongoose");
+const { formatDateTime } = require("../globalFunctions/formatDateTime");
+const fetch = require("isomorphic-fetch");
+const { wheelToken } = require("../config.json");
 
 module.exports = {
   data: {
@@ -17,6 +19,9 @@ module.exports = {
       const votingOptions = poll.votingOptions;
       const pollMessageChannel = await client.channels.fetch(poll.channelId);
       const pollMessage = await pollMessageChannel.messages.fetch(messageId);
+
+      const weighted = poll.weighted;
+
       const guildIconColour = await getMostFrequentGuildIconColour(
         pollMessageChannel.guild
       );
@@ -39,13 +44,13 @@ module.exports = {
       // Count the number of reactions for each vote option
       reactions.forEach((reaction) => {
         const reactionCode = reaction.emoji.name;
-        if (reactionCode === "game_sb") {
+        if (reactionCode === "gameSB") {
           skyBattleVotes = reaction.count - 1;
-        } else if (reactionCode === "game_bb") {
+        } else if (reactionCode === "gameBB") {
           battleBoxVotes = reaction.count - 1;
-        } else if (reactionCode === "game_hitw") {
+        } else if (reactionCode === "gameHITW") {
           holeInWallVotes = reaction.count - 1;
-        } else if (reactionCode === "game_tgttos") {
+        } else if (reactionCode === "gameTGTTOS") {
           toGetToOtherSideVotes = reaction.count - 1;
         }
         totalReactions += reaction.count - 1;
@@ -60,38 +65,46 @@ module.exports = {
 
       const games = [
         {
-          name: "# Sky Battle",
+          name: "Sky Battle",
           votes: skyBattleVotes,
           thumbnail:
             "https://cdn.discordapp.com/emojis/1089592353645412482.webp?size=1024&quality=lossless",
         },
         {
-          name: "# Battle Box",
+          name: "Battle Box",
           votes: battleBoxVotes,
           thumbnail:
             "https://cdn.discordapp.com/emojis/1089592675595984986.webp?size=1024&quality=lossless",
         },
         {
-          name: "# Hole In The Wall",
+          name: "Hole In The Wall",
           votes: holeInWallVotes,
           thumbnail:
             "https://cdn.discordapp.com/emojis/1089592541663469678.webp?size=1024&quality=lossless",
         },
         {
-          name: "# To Get To The Other Side",
+          name: "To Get To The Other Side",
           votes: toGetToOtherSideVotes,
           thumbnail:
             "https://cdn.discordapp.com/emojis/1089592804696653906.webp?size=1024&quality=lossless",
         },
       ];
 
+      const gamesListForWheel = games
+        .filter((game) => game.votes > 0)
+        .map((game) => ({ text: game.name, weight: game.votes }));
+
       games.sort((a, b) => b.votes - a.votes);
 
       if (games[0].votes > games[1].votes) {
-        winner = games[0].name;
+        winner = "# " + games[0].name;
         winnerEmbed.setThumbnail(games[0].thumbnail);
       } else {
         winner = "More than one game.";
+      }
+
+      if (weighted) {
+        winner = "Me! "
       }
 
       winnerEmbed.setDescription(
@@ -119,17 +132,4 @@ async function checkEndedPolls() {
       `Error retrieving the active polls at time: ${formattedDateTime}. Error message: ${error}`
     );
   }
-}
-
-function formatDateTime(date) {
-  const options = {
-    hour: "2-digit",
-    minute: "2-digit",
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  };
-  const timeString = date.toLocaleTimeString([], options).replace(/:\d+ /, " ");
-  const dateString = date.toLocaleDateString([], options).replace(/\//g, "/");
-  return `${timeString} ${dateString}`;
 }

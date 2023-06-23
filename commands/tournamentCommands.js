@@ -156,7 +156,7 @@ module.exports = {
           }
         }
         if (extraTournamentRoleForTeam) {
-          await interaction.reply({ content: messageForBase, messageForExtra });
+          await interaction.reply({ content: messageForBase + messageForExtra });
         } else {
           await interaction.reply({ content: messageForBase });
         }

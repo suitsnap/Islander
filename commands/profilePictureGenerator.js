@@ -5,6 +5,7 @@ const fetch = require("isomorphic-fetch");
 const PermissionFlagsBits = require("discord.js");
 
 module.exports = {
+  cooldown: 2,
   data: new SlashCommandBuilder()
     .setName("retrieve_icon")
     .setDescription(

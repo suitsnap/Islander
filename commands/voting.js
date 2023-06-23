@@ -9,9 +9,9 @@ const { generatePollBars } = require("../globalFunctions/generatePollBars");
 const {
   getMostFrequentGuildIconColour,
 } = require("../globalFunctions/getMostFrequentGuildIconColour");
-const mongoose = require("mongoose");
 
 module.exports = {
+  cooldown: 30,
   //Create the vote command
   data: new SlashCommandBuilder()
     .setName(`begin_vote`)
@@ -62,6 +62,7 @@ module.exports = {
         .setDescription(`Option role that restricts who can vote`)
     )
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages),
+
   async execute(interaction) {
     await interaction.deferReply({ ephemeral: true });
     await interaction.editReply("Sending reply now!");
@@ -69,7 +70,6 @@ module.exports = {
     //Define main variables from options of command
     const title = interaction.options.get("title").value;
     const duration = interaction.options.get("duration").value;
-    const durationInMillis = duration * 60000;
     const votingOptions = [
       interaction.options.get("sb_votable").value,
       interaction.options.get("bb_votable").value,
@@ -112,16 +112,16 @@ module.exports = {
     //Create list of all the relevant reaction emojis for this vote
     let reactionEmojis = [];
     if (votingOptions[0]) {
-      reactionEmojis.push("<:game_sb:1089592353645412482>");
+      reactionEmojis.push("<:gameSB:1089592353645412482>");
     }
     if (votingOptions[1]) {
-      reactionEmojis.push("<:game_bb:1089592675595984986>");
+      reactionEmojis.push("<:gameBB:1089592675595984986>");
     }
     if (votingOptions[2]) {
-      reactionEmojis.push("<:game_hitw:1089592541663469678>");
+      reactionEmojis.push("<:gameHITW:1089592541663469678>");
     }
     if (votingOptions[3]) {
-      reactionEmojis.push("<:game_tgttos:1089592804696653906>");
+      reactionEmojis.push("<:gameTGTTOS:1089592804696653906>");
     }
 
     //Sends the initial embed
