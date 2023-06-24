@@ -61,6 +61,13 @@ module.exports = {
         .setName(`role`)
         .setDescription(`Option role that restricts who can vote`)
     )
+    .addBooleanOption((option) =>
+      option
+        .setName(`weighted`)
+        .setDescription(
+          `Determines whether the vote is concluded by a weighted wheel.`
+        )
+    )
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages),
 
   async execute(interaction) {
@@ -77,7 +84,8 @@ module.exports = {
       interaction.options.get("tgttos_votable").value,
     ];
     const roleID = interaction.options.get("role") ?? null;
-    let timedOut = false;
+
+    const weightedWheel = interaction.options.get("weighted")?.value ?? false;
     const reactionCount = new Collection();
 
     //Get the average colour of the guild PFP for the embeds' colour
@@ -149,6 +157,7 @@ module.exports = {
       endUnix: Math.floor(pollEndTime.getTime() / 1000),
       channelId: interaction.channel.id,
       votingOptions: votingOptions,
+      weighted: weightedWheel,
       active: true,
     });
 
@@ -170,7 +179,6 @@ module.exports = {
         user.bot ||
         !reaction.message.guild ||
         pollMessage.id != reaction.message.id ||
-        timedOut ||
         !currentPoll.active
       )
         return;
@@ -218,7 +226,6 @@ module.exports = {
         user.bot ||
         !reaction.message.guild ||
         pollMessage.id != reaction.message.id ||
-        timedOut ||
         !currentPoll.active
       )
         return;

@@ -67,33 +67,38 @@ module.exports = {
         {
           name: "Sky Battle",
           votes: skyBattleVotes,
+          weight: skyBattleVotes / totalReactions,
           thumbnail:
             "https://cdn.discordapp.com/emojis/1089592353645412482.webp?size=1024&quality=lossless",
         },
         {
           name: "Battle Box",
           votes: battleBoxVotes,
+          weight: battleBoxVotes / totalReactions,
           thumbnail:
             "https://cdn.discordapp.com/emojis/1089592675595984986.webp?size=1024&quality=lossless",
         },
         {
           name: "Hole In The Wall",
           votes: holeInWallVotes,
+          weight: holeInWallVotes / totalReactions,
           thumbnail:
             "https://cdn.discordapp.com/emojis/1089592541663469678.webp?size=1024&quality=lossless",
         },
         {
           name: "To Get To The Other Side",
           votes: toGetToOtherSideVotes,
+          weight: toGetToOtherSideVotes / totalReactions,
           thumbnail:
             "https://cdn.discordapp.com/emojis/1089592804696653906.webp?size=1024&quality=lossless",
         },
       ];
 
-      const gamesListForWheel = games
-        .filter((game) => game.votes > 0)
-        .map((game) => ({ text: game.name, weight: game.votes }));
+      const gameWeights = {};
 
+      for (const game of games) {
+        gameWeights[game.name] = game.weight;
+      }
       games.sort((a, b) => b.votes - a.votes);
 
       if (games[0].votes > games[1].votes) {
@@ -103,19 +108,49 @@ module.exports = {
         winner = "More than one game.";
       }
 
+      let winMessage;
+
       if (weighted) {
-        winner = "Me! "
+        let rnd = Math.random();
+        let lower = 0.0;
+        for (let choice in gameWeights) {
+          let weight = gameWeights[choice];
+          let upper = lower + weight;
+          if (rnd >= lower && rnd < upper) {
+            winner = choice;
+          }
+          lower = upper;
+        }
+        const winnerGame = games.find((game) => game.name === winner);
+        winnerEmbed.setThumbnail(winnerGame.thumbnail);
+        const spinningEmbed = new EmbedBuilder()
+          .setTitle("The wheel is spinning!")
+          .setColor(guildIconColour);
+        winMessage = await pollMessageChannel.send({ embeds: [spinningEmbed] });
+        for (let i = 0; i < 12; i++) {
+          spinningEmbed.setDescription(`##  Spinning${".".repeat(i % 4)}`);
+          await winMessage.edit({ embeds: [spinningEmbed] });
+          await sleep(500);
+        }
       }
 
       winnerEmbed.setDescription(
         `# **  ${winner}  **\n<:star:1094418485951615027>** Total votes cast:**  ${totalReactions}`
       );
-      await pollMessageChannel.send({ embeds: [winnerEmbed] });
+      if (!weighted) {
+        await pollMessageChannel.send({ embeds: [winnerEmbed] });
+      } else {
+        await winMessage.edit({ embeds: [winnerEmbed] });
+      }
       poll.active = false;
       await poll.save();
     }
   },
 };
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 async function checkEndedPolls() {
   try {

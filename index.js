@@ -131,7 +131,7 @@ client.on("ready", () => {
   console.log(`Ready! Logged in as ${client.user.tag}`);
 });
 
-process.on("unhandledRejection", async (reason, promise) => {
+/*process.on("unhandledRejection", async (reason, promise) => {
   console.log(
     red + "ERROR - Unhandled Rejection" + reset,
     `Reason: ${reason}\nPromise: ${promise}`
@@ -151,7 +151,7 @@ process.on("uncaughtExceptionMonitor", (err, origin) => {
 
 client.on("error", (err) => {
   console.log(red + "ERROR - Discord.js Error" + reset, `Error: ${err}`);
-});
+});*/
 
 client.on("guildCreate", (guild) => {
   const rest = new REST({ version: "9" }).setToken(token);
