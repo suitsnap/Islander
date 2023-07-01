@@ -127,11 +127,11 @@ client.on("ready", () => {
     })
     .catch(console.error);
   updateStatus();
-  setInterval(updateStatus, 15000);
+  setInterval(updateStatus, 5000);
   console.log(`Ready! Logged in as ${client.user.tag}`);
 });
 
-/*process.on("unhandledRejection", async (reason, promise) => {
+process.on("unhandledRejection", async (reason, promise) => {
   console.log(
     red + "ERROR - Unhandled Rejection" + reset,
     `Reason: ${reason}\nPromise: ${promise}`
@@ -151,7 +151,7 @@ process.on("uncaughtExceptionMonitor", (err, origin) => {
 
 client.on("error", (err) => {
   console.log(red + "ERROR - Discord.js Error" + reset, `Error: ${err}`);
-});*/
+});
 
 client.on("guildCreate", (guild) => {
   const rest = new REST({ version: "9" }).setToken(token);
@@ -174,6 +174,9 @@ client.on("interactionCreate", async (interaction) => {
   if (!cooldowns.has(command.data.name)) {
     cooldowns.set(command.data.name, new Collection());
   }
+
+
+  console.log(`Guild named: ${interaction.guild.name}, ran command named: ${command.data.name}`);
 
   const now = Date.now();
   const timestamps = cooldowns.get(command.data.name);

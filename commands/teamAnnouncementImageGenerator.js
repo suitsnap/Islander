@@ -35,7 +35,7 @@ module.exports = {
               { name: "Aqua Axolotls", value: "AquaAxolotls.png" },
               { name: "Blue Bats", value: "BlueBats.png" },
               { name: "Purple Pandas", value: "PurplePandas.png" },
-              { name: "Pink Parrots", value: "Pink Parrots.png" }
+              { name: "Pink Parrots", value: "PinkParrots.png" }
             )
         )
         .addUserOption((option) =>
@@ -99,7 +99,7 @@ module.exports = {
               { name: "Aqua Axolotls", value: "AquaAxolotls.png" },
               { name: "Blue Bats", value: "BlueBats.png" },
               { name: "Purple Pandas", value: "PurplePandas.png" },
-              { name: "Pink Parrots", value: "Pink Parrots.png" }
+              { name: "Pink Parrots", value: "PinkParrots.png" }
             )
         )
         .addStringOption((option) =>
@@ -283,7 +283,8 @@ module.exports = {
           context.drawImage(userLoadedAvatar, 377 * i - 220, 310, 333, 333);
 
           const member = await interaction.guild.members.fetch(user.id);
-          const nickname = member.displayName;
+          let nickname = member.displayName;
+          nickname = nickname.charAt(0).toUpperCase() + nickname.slice(1);
 
           let textWidth = context.measureText(nickname).width;
           if (textWidth > maxWidthOfText) {

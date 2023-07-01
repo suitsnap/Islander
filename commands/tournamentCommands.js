@@ -143,9 +143,8 @@ module.exports = {
           interaction.options.getUser("player_four"),
         ];
         let messageForBase = `Added Role -  ${tournamentRoleForTeam.name} to Members:\n`;
-        let messageForExtra = `Also added Role - ${
-          extraTournamentRoleForTeam?.name ?? "blank"
-        } to Members:\n`;
+        let messageForExtra = extraTournamentRoleForTeam ? `Also added Role - ${
+          extraTournamentRoleForTeam?.name } to Members:\n` : ""
         for (const user of userArray) {
           const member = await interaction.guild.members.fetch(user.id);
           await member.roles.add(tournamentRoleForTeam);
@@ -155,8 +154,9 @@ module.exports = {
             messageForExtra += `${member.displayName}\n`;
           }
         }
+        const finalMessage = messageForBase + messageForExtra;
         if (extraTournamentRoleForTeam) {
-          await interaction.reply({ content: messageForBase + messageForExtra });
+          await interaction.reply({ content: finalMessage });
         } else {
           await interaction.reply({ content: messageForBase });
         }

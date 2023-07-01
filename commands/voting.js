@@ -17,7 +17,6 @@ module.exports = {
     .setName(`begin_vote`)
     .setDescription(`Begins the voting for which game you wish to play next!`)
     .setDMPermission(false)
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .addStringOption((option) =>
       option
         .setName(`title`)
@@ -117,6 +116,14 @@ module.exports = {
         iconURl: interaction.user.iconURL,
       });
 
+    if (weightedWheel) {
+      pollEmbed.setFooter({
+        text:
+          pollEmbed.data.footer.text +
+          ` | Poll winner determined by a weighted wheel`,
+      });
+    }
+
     //Create list of all the relevant reaction emojis for this vote
     let reactionEmojis = [];
     if (votingOptions[0]) {
@@ -188,8 +195,18 @@ module.exports = {
         reaction.users.remove(user.id).catch(console.error);
       }
 
-      const { message } = reaction;
-      let member = reaction.message.guild.members.cache.get(user.id);
+      const listOfReactions = pollMessage.reactions.cache.values();
+
+      //No new reactions emojis can be added
+      for (const iteratedReaction of listOfReactions) {
+        // If the reaction is the one the user just added, skip it
+        if (iteratedReaction.emoji.name === reaction.emoji.name) continue;
+
+        // If the reaction was added by the user, remove it
+        if (iteratedReaction.users.cache.has(user.id)) {
+          await iteratedReaction.users.remove(user.id);
+        }
+      }
 
       //Limit reactions to member if need be
       if (roleID != null) {
@@ -199,15 +216,6 @@ module.exports = {
         }
       }
 
-      if (!reactionCount.get(message))
-        reactionCount.set(message, new Collection());
-      const userCount = reactionCount.get(message);
-      userCount.set(user, (userCount.get(user) || 0) + 1);
-
-      if (userCount.get(user) > 1) {
-        reaction.users.remove(user);
-        return;
-      }
       const pollMessageString = await generatePollBars(
         pollMessage,
         votingOptions
@@ -230,12 +238,6 @@ module.exports = {
       )
         return;
 
-      const { message } = reaction;
-      const userCount = reactionCount.get(message);
-      // subtract 1 from user's reaction count
-      try {
-        userCount.set(user, reactionCount.get(message).get(user) - 1);
-      } catch (TypeError) {}
       const pollMessageString = await generatePollBars(
         pollMessage,
         votingOptions

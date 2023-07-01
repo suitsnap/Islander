@@ -12,7 +12,6 @@ module.exports = {
       "Gets a downloadable version of one or four people's icons."
     )
     .setDMPermission(false)
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .addSubcommandGroup((group) =>
       group
         .setName("minecraft")
@@ -138,7 +137,9 @@ module.exports = {
                 )
             )
         )
-    ),
+    )
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
+
   async execute(interaction) {
     const subcommandGroup = interaction.options.getSubcommandGroup();
     const subcommand = interaction.options.getSubcommand();

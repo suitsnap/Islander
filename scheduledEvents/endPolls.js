@@ -5,8 +5,6 @@ const {
   getMostFrequentGuildIconColour,
 } = require("../globalFunctions/getMostFrequentGuildIconColour");
 const { formatDateTime } = require("../globalFunctions/formatDateTime");
-const fetch = require("isomorphic-fetch");
-const { wheelToken } = require("../config.json");
 
 module.exports = {
   data: {
@@ -122,7 +120,6 @@ module.exports = {
           lower = upper;
         }
         const winnerGame = games.find((game) => game.name === winner);
-        winnerEmbed.setThumbnail(winnerGame.thumbnail);
         const spinningEmbed = new EmbedBuilder()
           .setTitle("The wheel is spinning!")
           .setColor(guildIconColour);
