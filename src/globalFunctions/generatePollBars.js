@@ -7,6 +7,7 @@ async function generatePollBars(pollMessage, votingOptions) {
   let battleBoxVotes = 0;
   let holeInWallVotes = 0;
   let toGetToOtherSideVotes = 0;
+  let parkourWarriorVotes = 0;
 
   // Count the number of reactions for each vote option
   reactions.forEach((reaction) => {
@@ -19,6 +20,8 @@ async function generatePollBars(pollMessage, votingOptions) {
       holeInWallVotes = reaction.count - 1;
     } else if (reactionCode === "gameTGTTOS") {
       toGetToOtherSideVotes = reaction.count - 1;
+    } else if (reactionCode === "gamePKWS") {
+      parkourWarriorVotes = reaction.count - 1;
     }
     totalReactions += reaction.count - 1;
   });
@@ -28,6 +31,7 @@ async function generatePollBars(pollMessage, votingOptions) {
   let battleBoxPercentage = 0;
   let holeInWallPercentage = 0;
   let toGetToOtherSidePercentage = 0;
+  let parkourWarriorPercentage = 0;
 
   if (totalReactions > 0) {
     skyBattlePercentage =
@@ -46,12 +50,15 @@ async function generatePollBars(pollMessage, votingOptions) {
       Math.round(
         ((toGetToOtherSideVotes * 100) / totalReactions + Number.EPSILON) * 100
       ) / 100;
+    parkourWarriorPercentage =
+      Math.round(
+        ((parkourWarriorVotes * 100) / totalReactions + Number.EPSILON) * 100
+      ) / 100;
   }
-
   // Update the poll message with the new vote counts and percentages
   let pollMessageString = " ";
   if (votingOptions[0]) {
-    pollMessageString += `**Sky Battle**  <:gameSB:1089592353645412482> ${getBar(
+    pollMessageString += `**Sky Battle**  <:gameSB:1128115696832893018> ${getBar(
       skyBattlePercentage
     )} [ ${skyBattlePercentage}% • ${skyBattleVotes} ]\n\n`;
   }
@@ -69,6 +76,11 @@ async function generatePollBars(pollMessage, votingOptions) {
     pollMessageString += `**To Get To The Other Side**  <:gameTGTTOS:1089592804696653906> ${getBar(
       toGetToOtherSidePercentage
     )} [ ${toGetToOtherSidePercentage}% • ${toGetToOtherSideVotes} ]\n\n`;
+  }
+  if (votingOptions[4]) {
+    pollMessageString += `**Parkour Warrior: Survivor** <:gamePKWS:1128101611307278366> ${getBar(
+      parkourWarriorPercentage
+    )} [ ${parkourWarriorPercentage}% • ${parkourWarriorVotes} ]\n\n`;
   }
   pollMessageString += `Total Votes: ${totalReactions}`;
   return pollMessageString;

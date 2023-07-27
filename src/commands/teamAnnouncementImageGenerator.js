@@ -231,9 +231,9 @@ module.exports = {
     ),
 
   async execute(interaction) {
-    GlobalFonts.registerFromPath("./fonts/Minecraft.ttf", "Minecraft");
+    GlobalFonts.registerFromPath("./src/fonts/Minecraft.ttf", "Minecraft");
     GlobalFonts.registerFromPath(
-      "./fonts/Minecrafter.Reg.ttf",
+      "./src/fonts/Minecrafter.Reg.ttf",
       "MinecrafterFont"
     );
     await interaction.deferReply();
@@ -297,8 +297,8 @@ module.exports = {
           context.fillText(nickname, 377 * i - 54, 714);
           if (i == 1) {
             context.font = `34px MinecrafterFont`;
-            context.fillText(eventNumber.toString(), 113, 114);
-            context.fillText(eventNumber.toString(), 1672, 894);
+            context.fillText(eventNumber.toString(), 108, 114);
+            context.fillText(eventNumber.toString(), 1669, 894);
           }
           i++;
         }

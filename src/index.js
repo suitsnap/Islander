@@ -175,8 +175,9 @@ client.on("interactionCreate", async (interaction) => {
     cooldowns.set(command.data.name, new Collection());
   }
 
-
-  console.log(`Guild named: ${interaction.guild.name}, ran command named: ${command.data.name}`);
+  console.log(
+    `Guild named: ${interaction.guild.name}, ran command named: ${command.data.name}`
+  );
 
   const now = Date.now();
   const timestamps = cooldowns.get(command.data.name);

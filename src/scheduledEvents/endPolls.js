@@ -1,18 +1,23 @@
 const { EmbedBuilder, Attachment } = require("discord.js");
+const { MessageAttachment, MessageEmbed } = require("discord.js");
+const Discord = require("discord.js");
 const pollSchema = require("../schemas/pollSchema");
 const { generatePollBars } = require("../globalFunctions/generatePollBars");
 const {
   getMostFrequentGuildIconColour,
 } = require("../globalFunctions/getMostFrequentGuildIconColour");
 const { formatDateTime } = require("../globalFunctions/formatDateTime");
+const { generateSpinWheel } = require("../globalFunctions/spin-wheel");
 
 module.exports = {
   data: {
-    interval: "*/15 * * * * *",
+    interval: "*/25 * * * * *",
   },
   async execute(client) {
     const polls = await checkEndedPolls();
     for (const poll of polls) {
+      //poll.active = false;
+      //await poll.save();
       const messageId = poll.messageId;
       const votingOptions = poll.votingOptions;
       const pollMessageChannel = await client.channels.fetch(poll.channelId);
@@ -38,6 +43,7 @@ module.exports = {
       let battleBoxVotes = 0;
       let holeInWallVotes = 0;
       let toGetToOtherSideVotes = 0;
+      let parkourWarriorVotes = 0;
 
       // Count the number of reactions for each vote option
       reactions.forEach((reaction) => {
@@ -50,6 +56,8 @@ module.exports = {
           holeInWallVotes = reaction.count - 1;
         } else if (reactionCode === "gameTGTTOS") {
           toGetToOtherSideVotes = reaction.count - 1;
+        } else if (reactionCode === "gamePKWS") {
+          parkourWarriorVotes = reaction.count - 1;
         }
         totalReactions += reaction.count - 1;
       });
@@ -66,13 +74,15 @@ module.exports = {
           name: "Sky Battle",
           votes: skyBattleVotes,
           weight: skyBattleVotes / totalReactions,
+          colour: "#ee2700",
           thumbnail:
-            "https://cdn.discordapp.com/emojis/1089592353645412482.webp?size=1024&quality=lossless",
+            "https://cdn.discordapp.com/emojis/1128115696832893018.webp?size=1024&quality=lossless",
         },
         {
           name: "Battle Box",
           votes: battleBoxVotes,
           weight: battleBoxVotes / totalReactions,
+          colour: "#08b932",
           thumbnail:
             "https://cdn.discordapp.com/emojis/1089592675595984986.webp?size=1024&quality=lossless",
         },
@@ -80,6 +90,7 @@ module.exports = {
           name: "Hole In The Wall",
           votes: holeInWallVotes,
           weight: holeInWallVotes / totalReactions,
+          colour: "#5aff77",
           thumbnail:
             "https://cdn.discordapp.com/emojis/1089592541663469678.webp?size=1024&quality=lossless",
         },
@@ -87,16 +98,22 @@ module.exports = {
           name: "To Get To The Other Side",
           votes: toGetToOtherSideVotes,
           weight: toGetToOtherSideVotes / totalReactions,
+          colour: "#ffffff",
           thumbnail:
             "https://cdn.discordapp.com/emojis/1089592804696653906.webp?size=1024&quality=lossless",
         },
+        {
+          name: "Parkour Warrior: Survivor",
+          votes: parkourWarriorVotes,
+          weight: parkourWarriorVotes / totalReactions,
+          colour: "#11623F",
+          thumbnail:
+            "https://cdn.discordapp.com/emojis/1128101611307278366.webp?size=1024&quality=lossless",
+        },
       ];
 
-      const gameWeights = {};
+      const gamesCopy = JSON.parse(JSON.stringify(games));
 
-      for (const game of games) {
-        gameWeights[game.name] = game.weight;
-      }
       games.sort((a, b) => b.votes - a.votes);
 
       if (games[0].votes > games[1].votes) {
@@ -109,22 +126,52 @@ module.exports = {
       let winMessage;
 
       if (weighted) {
-        let rnd = Math.random();
-        let lower = 0.0;
-        for (let choice in gameWeights) {
-          let weight = gameWeights[choice];
-          let upper = lower + weight;
-          if (rnd >= lower && rnd < upper) {
-            winner = choice;
-          }
-          lower = upper;
-        }
-        const winnerGame = games.find((game) => game.name === winner);
+        const FRAME_DELAY_MS = 50;
+        const MAX_DURATION_MS = 5000;
+        const LAST_FRAME_DURATION_MS = 1000 / FRAME_DELAY_MS;
+        const MIN_ANGLE = 360;
+        const MAX_ANGLE = 360 * 8;
+        const DURATION = MAX_DURATION_MS / FRAME_DELAY_MS;
+
+        const styles = {
+          canvas: {
+            width: 250,
+            height: 250,
+          },
+        };
+
+        const randomEndAngle =
+          Math.random() * (MAX_ANGLE - MIN_ANGLE) + MIN_ANGLE;
+
+        const wheel = generateSpinWheel(
+          gamesCopy,
+          randomEndAngle,
+          DURATION,
+          FRAME_DELAY_MS,
+          styles.canvas.width,
+          styles.canvas.height,
+          LAST_FRAME_DURATION_MS
+        );
+
+        winner = wheel.selectedOption;
+        console.log(winner);
+        gamesCopy.filter((option) => option.name === winner);
+        winnerEmbed.setThumbnail(gamesCopy[0].thumbnail);
+
+        const spinWheelAttachment = new Discord.AttachmentBuilder(
+          wheel.getGif(),
+          { name: "spin-wheel.gif" }
+        );
+
         const spinningEmbed = new EmbedBuilder()
-          .setTitle("The wheel is spinning!")
+          .setTitle("Weighted Wheel Results...")
           .setColor(guildIconColour);
-        winMessage = await pollMessageChannel.send({ embeds: [spinningEmbed] });
-        for (let i = 0; i < 12; i++) {
+
+        winMessage = await pollMessageChannel.send({
+          embeds: [spinningEmbed],
+          files: [spinWheelAttachment],
+        });
+        for (let i = 0; i < 8; i++) {
           spinningEmbed.setDescription(`##  Spinning${".".repeat(i % 4)}`);
           await winMessage.edit({ embeds: [spinningEmbed] });
           await sleep(500);
@@ -139,8 +186,6 @@ module.exports = {
       } else {
         await winMessage.edit({ embeds: [winnerEmbed] });
       }
-      poll.active = false;
-      await poll.save();
     }
   },
 };

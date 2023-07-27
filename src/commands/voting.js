@@ -55,6 +55,14 @@ module.exports = {
         )
         .setRequired(true)
     )
+    .addBooleanOption((option) =>
+      option
+        .setName(`pkws_votable`)
+        .setDescription(
+          `Determines whether Parkour Warrior: Survivor is in the vote`
+        )
+        .setRequired(true)
+    )
     .addRoleOption((option) =>
       option
         .setName(`role`)
@@ -81,11 +89,11 @@ module.exports = {
       interaction.options.get("bb_votable").value,
       interaction.options.get("hitw_votable").value,
       interaction.options.get("tgttos_votable").value,
+      interaction.options.get("pkws_votable").value,
     ];
     const roleID = interaction.options.get("role") ?? null;
 
     const weightedWheel = interaction.options.get("weighted")?.value ?? false;
-    const reactionCount = new Collection();
 
     //Get the average colour of the guild PFP for the embeds' colour
     const guild = interaction.guild;
@@ -127,7 +135,7 @@ module.exports = {
     //Create list of all the relevant reaction emojis for this vote
     let reactionEmojis = [];
     if (votingOptions[0]) {
-      reactionEmojis.push("<:gameSB:1089592353645412482>");
+      reactionEmojis.push("<:gameSB:1128115696832893018>");
     }
     if (votingOptions[1]) {
       reactionEmojis.push("<:gameBB:1089592675595984986>");
@@ -137,6 +145,9 @@ module.exports = {
     }
     if (votingOptions[3]) {
       reactionEmojis.push("<:gameTGTTOS:1089592804696653906>");
+    }
+    if (votingOptions[4]) {
+      reactionEmojis.push("<:gamePKWS:1128101611307278366>");
     }
 
     //Sends the initial embed
@@ -210,6 +221,7 @@ module.exports = {
 
       //Limit reactions to member if need be
       if (roleID != null) {
+        const member = await interaction.guild.members.fetch(user.id);
         if (!member.roles.cache.has(roleID.value)) {
           reaction.users.remove(user.id).catch(console.error);
           return;

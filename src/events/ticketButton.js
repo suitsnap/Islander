@@ -1,3 +1,5 @@
+const { ChannelType, PermissionFlagsBits, ButtonBuilder, ActionRowBuilder } = require("discord.js");
+
 function ticketButton(buttonInteraction) {
   buttonInteraction.deferReply({ ephemeral: true });
   const category = buttonInteraction.client.channels.cache.get(
