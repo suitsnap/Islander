@@ -16,8 +16,8 @@ module.exports = {
   async execute(client) {
     const polls = await checkEndedPolls();
     for (const poll of polls) {
-      //poll.active = false;
-      //await poll.save();
+      poll.active = false;
+      await poll.save();
       const messageId = poll.messageId;
       const votingOptions = poll.votingOptions;
       const pollMessageChannel = await client.channels.fetch(poll.channelId);

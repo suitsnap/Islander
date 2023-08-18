@@ -187,14 +187,14 @@ async function processAvatar(interaction, user, formatOfPhoto, regex) {
   const avatarUrl = user.avatarURL({
     format: formatOfPhoto,
     dynamic: true,
-    size: 4096,
+    size: 1024,
   });
 
   try {
     const response = await fetch(avatarUrl);
     const buffer = await response.buffer();
 
-    const canvas = createCanvas(512, 512);
+    const canvas = createCanvas(1024, 1024);
     const ctx = canvas.getContext("2d");
 
     const image = await loadImage(buffer);

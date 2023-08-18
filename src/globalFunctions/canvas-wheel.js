@@ -49,7 +49,7 @@ const createCanvasWheel = (
 
   const easing = (step) => easeOutQuad(step, 0, endAngle, totalSteps);
 
-  const drawCicle = () => {
+  const drawCircle = () => {
     ctx.beginPath();
     ctx.arc(0, 0, radius, 0, Math.PI * 2);
     ctx.fillStyle = styles.circle.fillColor;
@@ -150,7 +150,7 @@ const createCanvasWheel = (
     ctx.rotate(angle);
     ctx.clearRect(0, 0, cw, ch);
 
-    drawCicle();
+    drawCircle();
     drawOptions(angle);
     drawCenterDot();
     drawArrow();

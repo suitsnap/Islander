@@ -31,11 +31,12 @@ const client = new Client({
 client.cooldowns = new Collection();
 
 const statusOptions = [
+  ["Parkour Warrior: Survivor", ActivityType.Playing],
   ["To Get to the Other Side", ActivityType.Playing],
   ["Hole in the Wall", ActivityType.Playing],
   ["Battle Box", ActivityType.Playing],
   ["Sky Battle", ActivityType.Playing],
-  ["Parkour Warrior: Solo", ActivityType.Playing],
+  ["Parkour Warrior: Dojo", ActivityType.Playing],
   ["play.mccisland.net", ActivityType.Playing],
   ["MCC Island Speedruns", ActivityType.Watching],
   ["Admin Streams", ActivityType.Streaming],

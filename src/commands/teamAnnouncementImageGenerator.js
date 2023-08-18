@@ -256,7 +256,7 @@ module.exports = {
         context.textAlign = "center";
         context.textBaseline = "middle";
 
-        const background = await loadImage(`./teamPhotos/${teamFilename}`);
+        const background = await loadImage(`./src/teamPhotos/${teamFilename}`);
 
         context.drawImage(background, 0, 0, canvas.width, canvas.height);
 
@@ -355,7 +355,7 @@ module.exports = {
         context.textAlign = "center";
         context.textBaseline = "middle";
 
-        const background = await loadImage(`./teamPhotos/${teamFilename}`);
+        const background = await loadImage(`./src/teamPhotos/${teamFilename}`);
 
         context.drawImage(background, 0, 0, canvas.width, canvas.height);
 

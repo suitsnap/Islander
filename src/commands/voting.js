@@ -167,7 +167,7 @@ module.exports = {
       pollMessage.react(reaction);
     }
 
-    //Add to database in case of emergency (bot stops mid vote)
+    //Add to database 
     pollSchema.create({
       pollId: generatedPollId,
       messageId: pollMessage.id,
