@@ -2,7 +2,9 @@ const {
   Client,
   GatewayIntentBits,
   Collection,
+  Events,
   ActivityType,
+  ChannelType,
 } = require("discord.js");
 const { ticketButton } = require("./events/ticketButton");
 const { token, clientID, guildID, databaseToken } = require("./config.json");
@@ -237,6 +239,79 @@ client.on("guildMemberAdd", (member) => {
     member.roles.add(role);
   }
 });
+
+let userToVCMap = new Map();
+let channelCount = 0;
+const joinToCreateChannelId = "1096110594077237399";
+const categoryId = "1086418807293219006";
+
+client.on("voiceStateUpdate", async (oldState, newState) => {
+  const oldStateChannel =
+    oldState.guild.channels.cache.get(oldState.channelId) ?? [];
+  const newStateChannel =
+    newState.guild.channels.cache.get(newState.channelId) ?? [];
+  const oldParent = oldStateChannel?.parentId || "Joined from none";
+  const newParent = newStateChannel?.parentId || "Did not join another";
+  if (
+    (oldParent != categoryId && newParent != categoryId) ||
+    oldStateChannel.id == "1086419539153137747" ||
+    newStateChannel.id == "1086419539153137747" ||
+    oldStateChannel.id == "1148651127043280917" ||
+    newStateChannel.id == "1148651127043280917"
+  ) {
+    return;
+  }
+  console.log("made it");
+  try {
+    if (newState.channel.id === joinToCreateChannelId) {
+      const guild = newState.guild;
+      let vc = userToVCMap.get(newState.member.user.id);
+
+      if (vc) {
+        // User already has a temporary VC, move them to it
+      } else {
+        // Create new temporary VC
+        vc = await createNewVC(guild);
+
+        // Move user to new VC
+        await newState.setChannel(vc);
+
+        // Add user to VC map
+        userToVCMap.set(user.id, vc);
+      }
+    }
+  } catch (err) {}
+
+  try {
+    if (oldState.channel.id) {
+      const oldChannel = oldState.guild.channels.cache.get(oldState.channel.id);
+
+      if (oldChannel.id === userToVCMap.get(oldState.member.user.id)) {
+        userToVCMap.delete(oldState.member.user.id);
+      }
+
+      if (
+        oldChannel.parent.id === categoryId &&
+        oldChannel.id !== joinToCreateChannelId &&
+        oldChannel.members.size === 0
+      ) {
+        await oldChannel.delete();
+        channelCount--;
+      }
+    }
+  } catch (err) {}
+});
+
+async function createNewVC(guild) {
+  channelCount++;
+  const vc = await guild.channels.create({
+    name: `VC ${channelCount}`,
+    type: ChannelType.GuildVoice,
+    parent: categoryId,
+    userLimit: 10,
+  });
+  return vc;
+}
 
 client.login(token);
 (async () => {
