@@ -65,7 +65,7 @@ module.exports = {
       let winnerEmbed = new EmbedBuilder()
         .setColor(guildIconColour)
         .setTitle(
-          "<:mcc_crown:1112828436839407756>** Winner of the vote is:**"
+          `<:mcc_crown:1112828436839407756>** Winner of the vote '${poll.title}' is:**`
         );
       let winner;
 
@@ -128,8 +128,6 @@ module.exports = {
         winner = "More than one game.";
       }
 
-      let winMessage;
-
       switch (ending) {
         case "normal":
           winnerEmbed.setDescription(
@@ -153,8 +151,13 @@ module.exports = {
           await pollMessageChannel.send({ embeds: [endEmbed] });
           break;
         case "weighted":
-          weightedWheel(gamesCopy, pollMessageChannel, winnerEmbed);
-          await winMessage.edit({ embeds: [winnerEmbed] });
+          weightedWheel(
+            gamesCopy,
+            pollMessageChannel,
+            winnerEmbed,
+            guildIconColour
+          );
+          
           break;
         case "random":
           break;
@@ -186,7 +189,13 @@ async function checkEndedPolls() {
   }
 }
 
-async function weightedWheel(gamesCopy, pollMessageChannel, winnerEmbed) {
+async function weightedWheel(
+  gamesCopy,
+  pollMessageChannel,
+  winnerEmbed,
+  guildIconColour
+) {
+  let winMessage;
   const FRAME_DELAY_MS = 50;
   const MAX_DURATION_MS = 5000;
   const LAST_FRAME_DURATION_MS = 1000 / FRAME_DELAY_MS;
@@ -235,4 +244,5 @@ async function weightedWheel(gamesCopy, pollMessageChannel, winnerEmbed) {
     await winMessage.edit({ embeds: [spinningEmbed] });
     await sleep(500);
   }
+  await winMessage.edit({ embeds: [winnerEmbed] });
 }
