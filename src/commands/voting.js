@@ -159,11 +159,7 @@ module.exports = {
       reactionEmojis.push("<:gamePKWS:1128101611307278366>");
     }
 
-    //Sends the initial embed
-
-    console.log(roleID);
-    //extract the mentionable role from the roleID variable
-
+    //Send the initial poll message
     let pollMessage = await interaction.channel.send({
       content: `${roleID != null ? "<@&" + roleID.value + ">" : ""}`,
       embeds: [pollEmbed],
