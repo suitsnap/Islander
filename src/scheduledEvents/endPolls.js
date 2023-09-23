@@ -140,13 +140,12 @@ module.exports = {
         case "noEnding":
           const endEmbed = new EmbedBuilder()
             .setColor(guildIconColour)
-            .setTitle("The vote has ended!");
-
+            .setTitle(`Vote '${poll.title}' has ended!`);
           let description =
-            "The vote has ended with the following results:\n\n";
+            "## The vote has ended with the following results:\n";
           for (let i = 0; i < games.length; i++) {
             if (votingOptions[i]) {
-              description += `${games[i].emoji} ${games[i].name} - ${games[i].votes} votes\n\n`;
+              description += `\n### ${games[i].emoji} ${games[i].name} - ${games[i].votes} votes\n`;
             }
           }
           description += "\nTotal votes cast: " + totalReactions;
@@ -155,15 +154,13 @@ module.exports = {
           break;
         case "weighted":
           weightedWheel(gamesCopy, pollMessageChannel, winnerEmbed);
-           await winMessage.edit({ embeds: [winnerEmbed] });
+          await winMessage.edit({ embeds: [winnerEmbed] });
           break;
         case "random":
           break;
         default:
           break;
       }
-
-      
     }
   },
 };

@@ -184,6 +184,7 @@ module.exports = {
       endUnix: Math.floor(pollEndTime.getTime() / 1000),
       channelId: interaction.channel.id,
       votingOptions: votingOptions,
+      title: title,
       ending: ending,
       active: true,
     });
