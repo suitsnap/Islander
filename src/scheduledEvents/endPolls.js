@@ -11,7 +11,7 @@ const { generateSpinWheel } = require("../globalFunctions/spin-wheel");
 
 module.exports = {
   data: {
-    interval: "*/25 * * * * *",
+    interval: "*/5 * * * * *",
   },
   async execute(client) {
     const polls = await checkEndedPolls();
@@ -23,7 +23,7 @@ module.exports = {
       const pollMessageChannel = await client.channels.fetch(poll.channelId);
       const pollMessage = await pollMessageChannel.messages.fetch(messageId);
 
-      const weighted = poll.weighted;
+      const ending = poll.ending;
 
       const guildIconColour = await getMostFrequentGuildIconColour(
         pollMessageChannel.guild
@@ -74,6 +74,7 @@ module.exports = {
           name: "Sky Battle",
           votes: skyBattleVotes,
           weight: skyBattleVotes / totalReactions,
+          emoji: "<:gameSB:1128115696832893018>",
           colour: "#ee2700",
           thumbnail:
             "https://cdn.discordapp.com/emojis/1128115696832893018.webp?size=1024&quality=lossless",
@@ -83,6 +84,7 @@ module.exports = {
           votes: battleBoxVotes,
           weight: battleBoxVotes / totalReactions,
           colour: "#08b932",
+          emoji: "<:gameBB:1089592675595984986>",
           thumbnail:
             "https://cdn.discordapp.com/emojis/1089592675595984986.webp?size=1024&quality=lossless",
         },
@@ -91,6 +93,7 @@ module.exports = {
           votes: holeInWallVotes,
           weight: holeInWallVotes / totalReactions,
           colour: "#5aff77",
+          emoji: "<:gameHITW:1089592541663469678>",
           thumbnail:
             "https://cdn.discordapp.com/emojis/1089592541663469678.webp?size=1024&quality=lossless",
         },
@@ -99,6 +102,7 @@ module.exports = {
           votes: toGetToOtherSideVotes,
           weight: toGetToOtherSideVotes / totalReactions,
           colour: "#ffffff",
+          emoji: "<:gameTGTTOS:1089592804696653906>",
           thumbnail:
             "https://cdn.discordapp.com/emojis/1089592804696653906.webp?size=1024&quality=lossless",
         },
@@ -107,6 +111,7 @@ module.exports = {
           votes: parkourWarriorVotes,
           weight: parkourWarriorVotes / totalReactions,
           colour: "#11623F",
+          emoji: "<:gamePKWS:1128101611307278366>",
           thumbnail:
             "https://cdn.discordapp.com/emojis/1128101611307278366.webp?size=1024&quality=lossless",
         },
@@ -125,67 +130,40 @@ module.exports = {
 
       let winMessage;
 
-      if (weighted) {
-        const FRAME_DELAY_MS = 50;
-        const MAX_DURATION_MS = 5000;
-        const LAST_FRAME_DURATION_MS = 1000 / FRAME_DELAY_MS;
-        const MIN_ANGLE = 360;
-        const MAX_ANGLE = 360 * 8;
-        const DURATION = MAX_DURATION_MS / FRAME_DELAY_MS;
+      switch (ending) {
+        case "normal":
+          winnerEmbed.setDescription(
+            `# **  ${winner}  **\n<:star:1094418485951615027>** Total votes cast:**  ${totalReactions}`
+          );
+          await pollMessageChannel.send({ embeds: [winnerEmbed] });
+          break;
+        case "noEnding":
+          const endEmbed = new EmbedBuilder()
+            .setColor(guildIconColour)
+            .setTitle("The vote has ended!");
 
-        const styles = {
-          canvas: {
-            width: 250,
-            height: 250,
-          },
-        };
-
-        const randomEndAngle =
-          Math.random() * (MAX_ANGLE - MIN_ANGLE) + MIN_ANGLE;
-
-        const wheel = generateSpinWheel(
-          gamesCopy,
-          randomEndAngle,
-          DURATION,
-          FRAME_DELAY_MS,
-          styles.canvas.width,
-          styles.canvas.height,
-          LAST_FRAME_DURATION_MS
-        );
-
-        winner = wheel.selectedOption;
-        console.log(winner);
-        gamesCopy.filter((option) => option.name === winner);
-        winnerEmbed.setThumbnail(gamesCopy[0].thumbnail);
-
-        const spinWheelAttachment = new Discord.AttachmentBuilder(
-          wheel.getGif(),
-          { name: "spin-wheel.gif" }
-        );
-
-        const spinningEmbed = new EmbedBuilder()
-          .setTitle("Weighted Wheel Results...")
-          .setColor(guildIconColour);
-
-        winMessage = await pollMessageChannel.send({
-          embeds: [spinningEmbed],
-          files: [spinWheelAttachment],
-        });
-        for (let i = 0; i < 8; i++) {
-          spinningEmbed.setDescription(`##  Spinning${".".repeat(i % 4)}`);
-          await winMessage.edit({ embeds: [spinningEmbed] });
-          await sleep(500);
-        }
+          let description =
+            "The vote has ended with the following results:\n\n";
+          for (let i = 0; i < games.length; i++) {
+            if (votingOptions[i]) {
+              description += `${games[i].emoji} ${games[i].name} - ${games[i].votes} votes\n`;
+            }
+          }
+          description += "\nTotal votes cast: " + totalReactions;
+          endEmbed.setDescription(description);
+          await pollMessageChannel.send({ embeds: [endEmbed] });
+          break;
+        case "weighted":
+          weightedWheel(gamesCopy, pollMessageChannel, winnerEmbed);
+           await winMessage.edit({ embeds: [winnerEmbed] });
+          break;
+        case "random":
+          break;
+        default:
+          break;
       }
 
-      winnerEmbed.setDescription(
-        `# **  ${winner}  **\n<:star:1094418485951615027>** Total votes cast:**  ${totalReactions}`
-      );
-      if (!weighted) {
-        await pollMessageChannel.send({ embeds: [winnerEmbed] });
-      } else {
-        await winMessage.edit({ embeds: [winnerEmbed] });
-      }
+      
     }
   },
 };
@@ -208,5 +186,56 @@ async function checkEndedPolls() {
     console.error(
       `Error retrieving the active polls at time: ${formattedDateTime}. Error message: ${error}`
     );
+  }
+}
+
+async function weightedWheel(gamesCopy, pollMessageChannel, winnerEmbed) {
+  const FRAME_DELAY_MS = 50;
+  const MAX_DURATION_MS = 5000;
+  const LAST_FRAME_DURATION_MS = 1000 / FRAME_DELAY_MS;
+  const MIN_ANGLE = 360;
+  const MAX_ANGLE = 360 * 8;
+  const DURATION = MAX_DURATION_MS / FRAME_DELAY_MS;
+
+  const styles = {
+    canvas: {
+      width: 250,
+      height: 250,
+    },
+  };
+
+  const randomEndAngle = Math.random() * (MAX_ANGLE - MIN_ANGLE) + MIN_ANGLE;
+
+  const wheel = generateSpinWheel(
+    gamesCopy,
+    randomEndAngle,
+    DURATION,
+    FRAME_DELAY_MS,
+    styles.canvas.width,
+    styles.canvas.height,
+    LAST_FRAME_DURATION_MS
+  );
+
+  winner = wheel.selectedOption;
+  console.log(winner);
+  gamesCopy.filter((option) => option.name === winner);
+  winnerEmbed.setThumbnail(gamesCopy[0].thumbnail);
+
+  const spinWheelAttachment = new Discord.AttachmentBuilder(wheel.getGif(), {
+    name: "spin-wheel.gif",
+  });
+
+  const spinningEmbed = new EmbedBuilder()
+    .setTitle("Weighted Wheel Results...")
+    .setColor(guildIconColour);
+
+  winMessage = await pollMessageChannel.send({
+    embeds: [spinningEmbed],
+    files: [spinWheelAttachment],
+  });
+  for (let i = 0; i < 8; i++) {
+    spinningEmbed.setDescription(`##  Spinning${".".repeat(i % 4)}`);
+    await winMessage.edit({ embeds: [spinningEmbed] });
+    await sleep(500);
   }
 }

@@ -63,20 +63,36 @@ module.exports = {
         )
         .setRequired(true)
     )
+    .addStringOption((option) =>
+      option
+        .setName(`ending`)
+        .setDescription(`Determines the ending of the vote.`)
+        .addChoices(
+          {
+            name: "Normal",
+            value: "normal",
+          },
+          {
+            name: "No ending",
+            value: "noEnding",
+          },
+          {
+            name: "Weighted (not functional currently)",
+            value: "weighted",
+          },
+          {
+            name: "Random - troll kekw",
+            value: "random",
+          }
+        )
+        .setRequired(true)
+    )
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages)
     .addRoleOption((option) =>
       option
         .setName(`role`)
         .setDescription(`Option role that restricts who can vote`)
-    )
-    .addBooleanOption((option) =>
-      option
-        .setName(`weighted`)
-        .setDescription(
-          `Determines whether the vote is concluded by a weighted wheel.`
-        )
-    )
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages),
-
+    ),
   async execute(interaction) {
     await interaction.deferReply({ ephemeral: true });
     await interaction.editReply("Sending reply now!");
@@ -91,9 +107,10 @@ module.exports = {
       interaction.options.get("tgttos_votable").value,
       interaction.options.get("pkws_votable").value,
     ];
-    const roleID = interaction.options.get("role") ?? null;
 
-    const weightedWheel = interaction.options.get("weighted")?.value ?? false;
+    const ending = interaction.options.get("ending").value;
+
+    const roleID = interaction.options.get("role") ?? null;
 
     //Get the average colour of the guild PFP for the embeds' colour
     const guild = interaction.guild;
@@ -123,14 +140,6 @@ module.exports = {
         text: `Poll ID: ${generatedPollId} | Created by: ${interaction.user.username}`,
         iconURl: interaction.user.iconURL,
       });
-
-    if (weightedWheel) {
-      pollEmbed.setFooter({
-        text:
-          pollEmbed.data.footer.text +
-          ` | Poll winner determined by a weighted wheel`,
-      });
-    }
 
     //Create list of all the relevant reaction emojis for this vote
     let reactionEmojis = [];
@@ -167,7 +176,7 @@ module.exports = {
       pollMessage.react(reaction);
     }
 
-    //Add to database 
+    //Add to database
     pollSchema.create({
       pollId: generatedPollId,
       messageId: pollMessage.id,
@@ -175,7 +184,7 @@ module.exports = {
       endUnix: Math.floor(pollEndTime.getTime() / 1000),
       channelId: interaction.channel.id,
       votingOptions: votingOptions,
-      weighted: weightedWheel,
+      ending: ending,
       active: true,
     });
 
