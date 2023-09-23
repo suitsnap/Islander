@@ -160,7 +160,14 @@ module.exports = {
     }
 
     //Sends the initial embed
-    let pollMessage = await interaction.channel.send({ embeds: [pollEmbed] });
+
+    console.log(roleID);
+    //extract the mentionable role from the roleID variable
+
+    let pollMessage = await interaction.channel.send({
+      content: `${roleID != null ? "<@&" + roleID.value + ">" : ""}`,
+      embeds: [pollEmbed],
+    });
 
     //Create the initial poll bars (will be 0s)
     const pollMessageString = await generatePollBars(
