@@ -146,7 +146,7 @@ module.exports = {
             "The vote has ended with the following results:\n\n";
           for (let i = 0; i < games.length; i++) {
             if (votingOptions[i]) {
-              description += `${games[i].emoji} ${games[i].name} - ${games[i].votes} votes\n`;
+              description += `${games[i].emoji} ${games[i].name} - ${games[i].votes} votes\n\n`;
             }
           }
           description += "\nTotal votes cast: " + totalReactions;
