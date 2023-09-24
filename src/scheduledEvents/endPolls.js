@@ -157,7 +157,7 @@ module.exports = {
             winnerEmbed,
             guildIconColour
           );
-          
+
           break;
         case "random":
           break;
@@ -173,16 +173,14 @@ function sleep(ms) {
 }
 
 async function checkEndedPolls() {
+  const currentTime = Math.floor(Date.now() / 1000);
   try {
-    const currentTime = Math.floor(Date.now() / 1000); // Get the current time in seconds
-    const activePolls = await pollSchema.find({
+    return await pollSchema.find({
       active: true,
       endUnix: { $lt: currentTime },
     });
-    return activePolls;
   } catch (error) {
-    const currentTime = new Date();
-    const formattedDateTime = formatDateTime(currentTime);
+    const formattedDateTime = formatDateTime(new Date());
     console.error(
       `Error retrieving the active polls at time: ${formattedDateTime}. Error message: ${error}`
     );

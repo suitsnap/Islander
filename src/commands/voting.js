@@ -143,20 +143,18 @@ module.exports = {
 
     //Create list of all the relevant reaction emojis for this vote
     let reactionEmojis = [];
-    if (votingOptions[0]) {
-      reactionEmojis.push("<:gameSB:1128115696832893018>");
-    }
-    if (votingOptions[1]) {
-      reactionEmojis.push("<:gameBB:1089592675595984986>");
-    }
-    if (votingOptions[2]) {
-      reactionEmojis.push("<:gameHITW:1089592541663469678>");
-    }
-    if (votingOptions[3]) {
-      reactionEmojis.push("<:gameTGTTOS:1089592804696653906>");
-    }
-    if (votingOptions[4]) {
-      reactionEmojis.push("<:gamePKWS:1128101611307278366>");
+    for (let i = 0; i < votingOptions.length; i++) {
+      if (votingOptions[i] === 0) {
+        reactionEmojis.push("<:gameSB:1128115696832893018>");
+      } else if (votingOptions[i] === 1) {
+        reactionEmojis.push("<:gameBB:1089592675595984986>");
+      } else if (votingOptions[i] === 2) {
+        reactionEmojis.push("<:gameHITW:1089592541663469678>");
+      } else if (votingOptions[i] === 3) {
+        reactionEmojis.push("<:gameTGTTOS:1089592804696653906>");
+      } else if (votingOptions[i] === 4) {
+        reactionEmojis.push("<:gamePKWS:1128101611307278366>");
+      }
     }
 
     //Send the initial poll message
@@ -274,27 +272,15 @@ module.exports = {
 };
 
 async function generatePollId() {
-  const length = 10;
   const list = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-
   let generatedPollId = "";
-  const random = Math.random;
 
-  for (let i = 0; i < length; i++) {
-    const index = Math.floor(random() * list.length);
-    const randomChar = list.charAt(index);
-    generatedPollId += randomChar;
+  for (let i = 0; i < 10; i++) {
+    const index = Math.floor(Math.random() * list.length);
+    generatedPollId += list.charAt(index);
   }
 
   const data = await pollSchema.findOne({ pollId: generatedPollId });
 
-  if (!data) {
-    return generatedPollId;
-  } else {
-    try {
-      return generatePollId();
-    } catch (error) {
-      return "Error generating poll ID.";
-    }
-  }
+  return data ? generatePollId() : generatedPollId;
 }
