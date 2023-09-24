@@ -189,7 +189,6 @@ module.exports = {
 
     //React all the reactions
     for (const reaction of reactionEmojis) {
-      console.log(reaction);
       pollMessage.react(reaction);
     }
 
