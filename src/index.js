@@ -41,7 +41,7 @@ const statusOptions = [
   ["Parkour Warrior: Dojo", ActivityType.Playing],
   ["play.mccisland.net", ActivityType.Playing],
   ["MCC Island Speedruns", ActivityType.Watching],
-  ["Admin Streams", ActivityType.Streaming],
+  ["Admin Streams", ActivityType.Streaming, "https://twitch.tv/thenoxcrew"],
   ["the MCC Soundtrack", ActivityType.Listening],
   ["IW Tournaments", ActivityType.Competing],
 ];
@@ -49,8 +49,12 @@ let statusIndex = 0;
 
 function updateStatus() {
   const newStatus = statusOptions[statusIndex];
+  const activities = [{ name: newStatus[0], type: newStatus[1]}];
+  if (newStatus[1] === ActivityType.Streaming && newStatus[2]) {
+    activities[0].url = newStatus[2];
+  }
   client.user.setPresence({
-    activities: [{ name: newStatus[0], type: newStatus[1] }],
+    activities,
     status: "online",
   });
   statusIndex = (statusIndex + 1) % statusOptions.length;

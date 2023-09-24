@@ -44,6 +44,7 @@ module.exports = {
       let holeInWallVotes = 0;
       let toGetToOtherSideVotes = 0;
       let parkourWarriorVotes = 0;
+      let dynaballVotes = 0;
 
       // Count the number of reactions for each vote option
       reactions.forEach((reaction) => {
@@ -58,6 +59,8 @@ module.exports = {
           toGetToOtherSideVotes = reaction.count - 1;
         } else if (reactionCode === "gamePKWS") {
           parkourWarriorVotes = reaction.count - 1;
+        } else if (reactionCode === "gameDyB") {
+          dynaballVotes = reaction.count - 1;
         }
         totalReactions += reaction.count - 1;
       });
@@ -114,6 +117,15 @@ module.exports = {
           emoji: "<:gamePKWS:1128101611307278366>",
           thumbnail:
             "https://cdn.discordapp.com/emojis/1128101611307278366.webp?size=1024&quality=lossless",
+        },
+        {
+          name: "Dynaball",
+          votes: dynaballVotes,
+          weight: dynaballVotes / totalReactions,
+          colour: "#1a162f",
+          emoji: "<:gameDyB:1155449708119072808>",
+          thumbnail:
+            "https://cdn.discordapp.com/emojis/1155449708119072808.webp?size=1024&quality=lossless",
         },
       ];
 

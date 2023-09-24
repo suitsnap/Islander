@@ -63,6 +63,15 @@ module.exports = {
         )
         .setRequired(true)
     )
+    /*
+    .addBooleanOption((option) =>
+      option
+        .setName(`dyb_votable`)
+        .setDescription(
+          `Determines whether Dynaball is in the vote`
+          )
+        .setRequired(true)
+        ) */
     .addStringOption((option) =>
       option
         .setName(`ending`)
@@ -106,6 +115,7 @@ module.exports = {
       interaction.options.get("hitw_votable").value,
       interaction.options.get("tgttos_votable").value,
       interaction.options.get("pkws_votable").value,
+      //interaction.options.get("dyb_votable").value,
     ];
 
     const ending = interaction.options.get("ending").value;
@@ -143,19 +153,24 @@ module.exports = {
 
     //Create list of all the relevant reaction emojis for this vote
     let reactionEmojis = [];
-    for (let i = 0; i < votingOptions.length; i++) {
-      if (votingOptions[i] === 0) {
-        reactionEmojis.push("<:gameSB:1128115696832893018>");
-      } else if (votingOptions[i] === 1) {
-        reactionEmojis.push("<:gameBB:1089592675595984986>");
-      } else if (votingOptions[i] === 2) {
-        reactionEmojis.push("<:gameHITW:1089592541663469678>");
-      } else if (votingOptions[i] === 3) {
-        reactionEmojis.push("<:gameTGTTOS:1089592804696653906>");
-      } else if (votingOptions[i] === 4) {
-        reactionEmojis.push("<:gamePKWS:1128101611307278366>");
-      }
+    if (votingOptions[0]) {
+      reactionEmojis.push("<:gameSB:1128115696832893018>");
     }
+    if (votingOptions[1]) {
+      reactionEmojis.push("<:gameBB:1089592675595984986>");
+    }
+    if (votingOptions[2]) {
+      reactionEmojis.push("<:gameHITW:1089592541663469678>");
+    }
+    if (votingOptions[3]) {
+      reactionEmojis.push("<:gameTGTTOS:1089592804696653906>");
+    }
+    if (votingOptions[4]) {
+      reactionEmojis.push("<:gamePKWS:1128101611307278366>");
+    }
+    /*if (votingOptions[5]) {
+      reactionEmojis.push("<:gameDyB:1128101611307278366>");
+    }*/
 
     //Send the initial poll message
     let pollMessage = await interaction.channel.send({
@@ -174,6 +189,7 @@ module.exports = {
 
     //React all the reactions
     for (const reaction of reactionEmojis) {
+      console.log(reaction);
       pollMessage.react(reaction);
     }
 

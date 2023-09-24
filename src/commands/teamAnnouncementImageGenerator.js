@@ -237,6 +237,16 @@ module.exports = {
       "MinecrafterFont"
     );
     await interaction.deferReply();
+    const attachment = interaction.options.getAttachment("emblem");
+    if (
+      attachment &&
+      (!attachment.contentType || !attachment.contentType.startsWith("image/"))
+    ) {
+      await interaction.editReply({
+        content: "The emblem must be an image file!",
+      });
+      return;
+    }
     try {
       if (interaction.options.getSubcommand() == "with_discord") {
         const teamFilename = interaction.options.getString("team");
@@ -257,7 +267,6 @@ module.exports = {
         context.textBaseline = "middle";
 
         const background = await loadImage(`./src/teamPhotos/${teamFilename}`);
-
         context.drawImage(background, 0, 0, canvas.width, canvas.height);
 
         const maxWidthOfText = 190;
@@ -265,35 +274,31 @@ module.exports = {
         for (const user of userArray) {
           let fontSize = 40;
           let fontFamily = "Minecraft";
-
           context.font = `${fontSize}px ${fontFamily}`;
 
-          let userAvatar = user.avatarURL({
-            format: `png`,
-            dynamic: false,
-            size: 256,
-          });
-
-          if (userAvatar == null)
-            userAvatar =
-              "https://cdn.discordapp.com/attachments/1112755577685282846/1113600641760247899/incaseofermergency.png";
-
+          const userAvatar =
+            user.avatarURL({
+              format: `png`,
+              dynamic: false,
+              size: 256,
+            }) ||
+            "https://cdn.discordapp.com/attachments/1112755577685282846/1113600641760247899/incaseofermergency.png";
           const userLoadedAvatar = await loadImage(userAvatar);
-
           context.drawImage(userLoadedAvatar, 377 * i - 220, 310, 333, 333);
 
           const member = await interaction.guild.members.fetch(user.id);
-          let nickname = member.displayName;
-          nickname = nickname.charAt(0).toUpperCase() + nickname.slice(1);
-
+          let nickname =
+            member.displayName.charAt(0).toUpperCase() +
+            member.displayName.slice(1);
           let textWidth = context.measureText(nickname).width;
+
           if (textWidth > maxWidthOfText) {
             const scale = maxWidthOfText / textWidth;
             const newFontSize = Math.floor(fontSize * scale);
-
             context.font = `${newFontSize}px ${fontFamily}`;
             textWidth = context.measureText(nickname).width;
           }
+
           context.fillText(nickname, 377 * i - 54, 714);
           if (i == 1) {
             context.font = `34px MinecrafterFont`;
@@ -303,14 +308,11 @@ module.exports = {
           i++;
         }
 
-        const recievedEmblem = interaction.options.getAttachment("emblem");
-
-        if (recievedEmblem != null) {
+        const emblem = interaction.options.getAttachment("emblem");
+        if (emblem) {
           const targetWidth = 465;
           const targetHeight = 213;
-
-          const imageFromCommand = await loadImage(recievedEmblem.proxyURL);
-
+          const imageFromCommand = await loadImage(emblem.proxyURL);
           const imageAspectRatio =
             imageFromCommand.width / imageFromCommand.height;
           let drawWidth = targetWidth;
@@ -320,9 +322,9 @@ module.exports = {
             drawHeight = targetHeight;
             drawWidth = targetHeight * imageAspectRatio;
           }
+
           const drawX = 660 + (targetWidth - drawWidth) / 2;
           const drawY = 787 + (targetHeight - drawHeight) / 2;
-
           context.drawImage(
             imageFromCommand,
             drawX,
@@ -345,7 +347,6 @@ module.exports = {
           interaction.options.getString("player_three"),
           interaction.options.getString("player_four"),
         ];
-
         const eventNumber =
           interaction.options.getInteger("event_number") || " ";
 
@@ -356,7 +357,6 @@ module.exports = {
         context.textBaseline = "middle";
 
         const background = await loadImage(`./src/teamPhotos/${teamFilename}`);
-
         context.drawImage(background, 0, 0, canvas.width, canvas.height);
 
         const maxWidthOfText = 190;
@@ -364,20 +364,17 @@ module.exports = {
         for (const user of userArray) {
           let fontSize = 40;
           let fontFamily = "Minecraft";
-
           context.font = `${fontSize}px ${fontFamily}`;
 
-          let userFace = `https://mc-heads.net/avatar/${user}`;
-
-          const userLoadedAvatar = await loadImage(userFace);
-
+          const userLoadedAvatar = await loadImage(
+            `https://mc-heads.net/avatar/${user}`
+          );
           context.drawImage(userLoadedAvatar, 377 * i - 220, 310, 333, 333);
 
           let textWidth = context.measureText(user).width;
           if (textWidth > maxWidthOfText) {
             const scale = maxWidthOfText / textWidth;
             const newFontSize = Math.floor(fontSize * scale);
-
             context.font = `${newFontSize}px ${fontFamily}`;
             textWidth = context.measureText(user).width;
           }
@@ -390,26 +387,21 @@ module.exports = {
           i++;
         }
 
-        const recievedEmblem = interaction.options.getAttachment("emblem");
-
-        if (recievedEmblem != null) {
+        const emblem = interaction.options.getAttachment("emblem");
+        if (emblem) {
           const targetWidth = 465;
           const targetHeight = 213;
-
-          const imageFromCommand = await loadImage(recievedEmblem.proxyURL);
-
+          const imageFromCommand = await loadImage(emblem.proxyURL);
           const imageAspectRatio =
             imageFromCommand.width / imageFromCommand.height;
           let drawWidth = targetWidth;
           let drawHeight = targetWidth / imageAspectRatio;
-
           if (drawHeight > targetHeight) {
             drawHeight = targetHeight;
             drawWidth = targetHeight * imageAspectRatio;
           }
           const drawX = 660 + (targetWidth - drawWidth) / 2;
           const drawY = 787 + (targetHeight - drawHeight) / 2;
-
           context.drawImage(
             imageFromCommand,
             drawX,
@@ -422,7 +414,6 @@ module.exports = {
         const attachment = new AttachmentBuilder(await canvas.encode("png"), {
           name: teamFilename,
         });
-
         await interaction.editReply({ files: [attachment] });
       } else if (interaction.options.getSubcommand() == "with_custom") {
         const teamImage = interaction.options.getAttachment("team_image");

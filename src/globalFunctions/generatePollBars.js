@@ -8,6 +8,7 @@ async function generatePollBars(pollMessage, votingOptions) {
   let holeInWallVotes = 0;
   let toGetToOtherSideVotes = 0;
   let parkourWarriorVotes = 0;
+  let dynaballVotes = 0
 
   // Count the number of reactions for each vote option
   reactions.forEach((reaction) => {
@@ -22,6 +23,8 @@ async function generatePollBars(pollMessage, votingOptions) {
       toGetToOtherSideVotes = reaction.count - 1;
     } else if (reactionCode === "gamePKWS") {
       parkourWarriorVotes = reaction.count - 1;
+    } else if (reactionCode === "gameDyB") {
+      dynaballVotes = reaction.count - 1;
     }
     totalReactions += reaction.count - 1;
   });
@@ -32,6 +35,7 @@ async function generatePollBars(pollMessage, votingOptions) {
   let holeInWallPercentage = 0;
   let toGetToOtherSidePercentage = 0;
   let parkourWarriorPercentage = 0;
+  let dynaballPercentage = 0;
 
   if (totalReactions > 0) {
     skyBattlePercentage =
@@ -53,6 +57,10 @@ async function generatePollBars(pollMessage, votingOptions) {
     parkourWarriorPercentage =
       Math.round(
         ((parkourWarriorVotes * 100) / totalReactions + Number.EPSILON) * 100
+      ) / 100;
+    dynaballPercentage =
+      Math.round(
+        ((dynaballVotes * 100) / totalReactions + Number.EPSILON) * 100
       ) / 100;
   }
   // Update the poll message with the new vote counts and percentages
@@ -81,6 +89,11 @@ async function generatePollBars(pollMessage, votingOptions) {
     pollMessageString += `**Parkour Warrior: Survivor** <:gamePKWS:1128101611307278366> ${getBar(
       parkourWarriorPercentage
     )} [ ${parkourWarriorPercentage}% • ${parkourWarriorVotes} ]\n\n`;
+  }
+  if (votingOptions[5]) {
+    pollMessageString += `**Dynaball** <:gameDyB:1155449708119072808> ${getBar(
+      dynaballPercentage
+    )} [ ${dynaballPercentage}% • ${dynaballVotes} ]\n\n`;
   }
   pollMessageString += `Total Votes: ${totalReactions}`;
   return pollMessageString;
