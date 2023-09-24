@@ -2,7 +2,7 @@ const pollSchema = require("../schemas/pollSchema");
 
 module.exports = {
     data: {
-        // change to run at 2am every day
+        // change to run at 1:30am every day
         interval: "30 1 * * *",
     },
     async execute() {
