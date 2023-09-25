@@ -1,5 +1,11 @@
 const { getBar } = require("../globalFunctions/getBar");
 
+/**
+ * Generates the poll bars for the poll message
+ * @param {Message} pollMessage The poll message
+ * @param {boolean[]} votingOptions The voting options
+ * @returns {string} The poll message string
+ * */
 async function generatePollBars(pollMessage, votingOptions) {
   const reactions = await pollMessage.reactions.cache;
   let totalReactions = 0;
@@ -8,7 +14,7 @@ async function generatePollBars(pollMessage, votingOptions) {
   let holeInWallVotes = 0;
   let toGetToOtherSideVotes = 0;
   let parkourWarriorVotes = 0;
-  let dynaballVotes = 0
+  let dynaballVotes = 0;
 
   // Count the number of reactions for each vote option
   reactions.forEach((reaction) => {

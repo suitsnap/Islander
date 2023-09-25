@@ -1,6 +1,12 @@
 const axios = require("axios");
 const Jimp = require("jimp");
 
+/**
+ * Gets the most frequent colour in a guild's icon
+ * @param {Guild} guild The guild to get the icon colour of
+ * @param {number} [stepSize=1] The step size to use when iterating over the image
+ * @returns {Promise<string>} The most frequent colour in the guild's icon
+ * */
 async function getMostFrequentGuildIconColour(guild, stepSize = 1) {
   const iconURL = guild.iconURL({ extension: "png" });
   if (!iconURL) return null;

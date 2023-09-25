@@ -1,3 +1,8 @@
+/**
+ * Get the text colour that would be most visible on a given background colour
+ * @param {string} background The background colour in hex format
+ * @returns {string} The text colour in hex format
+ * */
 const getTextColorFromBackground = (background) => {
   const bg = parseInt(background.substr(1), 16);
   const r = (bg >> 16) & 0xff;

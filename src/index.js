@@ -265,7 +265,6 @@ client.on("voiceStateUpdate", async (oldState, newState) => {
   ) {
     return;
   }
-  console.log("made it");
   try {
     if (newState.channel.id === joinToCreateChannelId) {
       const guild = newState.guild;
