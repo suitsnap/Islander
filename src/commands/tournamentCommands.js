@@ -142,26 +142,34 @@ module.exports = {
           interaction.options.getUser("player_three"),
           interaction.options.getUser("player_four"),
         ];
-        let messageForBase = `Added Role -  ${tournamentRoleForTeam.name} to Members:\n`;
-        let messageForExtra = extraTournamentRoleForTeam ? `Also added Role - ${
-          extraTournamentRoleForTeam?.name } to Members:\n` : ""
+
+        //Ensure all the users are different users
+        const userSet = new Set(userArray);
+        if (userSet.size !== userArray.length) {
+          return await interaction.reply(
+            "You cannot have duplicate users in the command."
+          );
+        }
+
+        let message = `### Added roles to members.\n**Roles:**\n${tournamentRoleForTeam.name}`;
+        if (extraTournamentRoleForTeam) {
+          message += `, ${extraTournamentRoleForTeam.name}`;
+        }
+        message += "\n**Members:**\n";
+
         for (const user of userArray) {
           const member = await interaction.guild.members.fetch(user.id);
           await member.roles.add(tournamentRoleForTeam);
-          messageForBase += `${member.displayName}\n`;
+          message += `${member.displayName}\n`;
+
           if (extraTournamentRoleForTeam) {
             await member.roles.add(extraTournamentRoleForTeam);
-            messageForExtra += `${member.displayName}\n`;
           }
         }
-        const finalMessage = messageForBase + messageForExtra;
-        //Why do I have this if statement here? The string would only be affected with the extras if it's entered. Useless. TODO: Refactor.
-        if (extraTournamentRoleForTeam) {
-          await interaction.reply({ content: finalMessage });
-        } else {
-          await interaction.reply({ content: messageForBase });
-        }
 
+        await interaction.reply({
+          content: message,
+        });
         break;
     }
   },
