@@ -155,6 +155,7 @@ module.exports = {
           }
         }
         const finalMessage = messageForBase + messageForExtra;
+        //Why do I have this if statement here? The string would only be affected with the extras if it's entered. Useless. TODO: Refactor.
         if (extraTournamentRoleForTeam) {
           await interaction.reply({ content: finalMessage });
         } else {
