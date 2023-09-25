@@ -47,6 +47,9 @@ const statusOptions = [
 ];
 let statusIndex = 0;
 
+/**
+ * Updates the bot's status to the next status in the list every 5 seconds
+ */
 function updateStatus() {
   const newStatus = statusOptions[statusIndex];
   const activities = [{ name: newStatus[0], type: newStatus[1]}];
@@ -106,6 +109,11 @@ getCommands(scheduledEventsPath, (command) => {
   });
 });
 
+/**
+ * Gets all the commands in a directory
+ * @param {string} dir The directory to get the commands from
+ * @param {Function} callback The callback function to run on each command
+ */
 function getCommands(dir, callback) {
   const files = fs.readdirSync(dir).filter((file) => file.endsWith(".js"));
 
@@ -145,20 +153,20 @@ process.on("unhandledRejection", async (reason, promise) => {
   );
 });
 
-// process.on("uncaughtException", (err) => {
-//   console.log(red + "ERROR - Uncaught Exception" + reset, `Error: ${err}`);
-// });
+process.on("uncaughtException", (err) => {
+  console.log(red + "ERROR - Uncaught Exception" + reset, `Error: ${err}`);
+});
 
-// process.on("uncaughtExceptionMonitor", (err, origin) => {
-//   console.log(
-//     red + "ERROR - Uncaught Exception Monitor" + reset,
-//     `Error: ${err}\nOrigin: ${origin}`
-//   );
-// });
+process.on("uncaughtExceptionMonitor", (err, origin) => {
+  console.log(
+    red + "ERROR - Uncaught Exception Monitor" + reset,
+    `Error: ${err}\nOrigin: ${origin}`
+  );
+});
 
-// client.on("error", (err) => {
-//   console.log(red + "ERROR - Discord.js Error" + reset, `Error: ${err}`);
-// });
+client.on("error", (err) => {
+  console.log(red + "ERROR - Discord.js Error" + reset, `Error: ${err}`);
+});
 
 client.on("guildCreate", (guild) => {
   const rest = new REST({ version: "9" }).setToken(token);
@@ -206,14 +214,14 @@ client.on("interactionCreate", async (interaction) => {
   timestamps.set(interaction.user.id, now);
   setTimeout(() => timestamps.delete(interaction.user.id), cooldownAmount);
 
-  // try {
+  try {
     await command.execute(interaction);
-  // } catch (error) {
-  //   console.log(red + "ERROR - Discord.js Error" + reset, `Error: ${error}`);
-  //   await interaction.reply({
-  //     content: "There was an error executing this command",
-  //   });
-  // }
+  } catch (error) {
+    console.log(red + "ERROR - Discord.js Error" + reset, `Error: ${error}`);
+    await interaction.reply({
+      content: "There was an error executing this command",
+    });
+  }
 });
 
 client.on("interactionCreate", (buttonInteraction) => {

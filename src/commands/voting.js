@@ -286,6 +286,10 @@ module.exports = {
   },
 };
 
+/**
+ * Checks the database for polls that have ended
+ * @returns {Promise<Collection<string, any>>} A collection of polls that have ended
+ * */
 async function generatePollId() {
   const list = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   let generatedPollId = "";

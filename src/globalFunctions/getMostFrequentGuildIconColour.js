@@ -39,6 +39,13 @@ async function getMostFrequentGuildIconColour(guild, stepSize = 1) {
   return mostFrequentColor;
 }
 
+/**
+ * Converts RGB values to hex
+ * @param {number} r The red value
+ * @param {number} g The green value
+ * @param {number} b The blue value
+ * @returns {string} The hex value
+ */
 function rgbToHex(r, g, b) {
   return "#" + ((r << 16) | (g << 8) | b).toString(16).padStart(6, "0");
 }
