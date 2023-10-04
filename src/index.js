@@ -165,7 +165,7 @@ process.on("uncaughtExceptionMonitor", (err, origin) => {
 });
 
 client.on("error", (err) => {
-  console.log(red + "ERROR - Discord.js Error" + reset, `Error: ${err}`);
+  console.log(red + "ERROR - Discord.js Error in Index" + reset, `Error: ${err}`);
 });
 
 client.on("guildCreate", (guild) => {
@@ -217,7 +217,7 @@ client.on("interactionCreate", async (interaction) => {
   try {
     await command.execute(interaction);
   } catch (error) {
-    console.log(red + "ERROR - Discord.js Error" + reset, `Error: ${error}`);
+    console.log(red + "ERROR - Discord.js Error in Command" + reset, `Error: ${error}`);
     await interaction.reply({
       content: "There was an error executing this command",
     });

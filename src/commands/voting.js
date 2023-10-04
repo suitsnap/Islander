@@ -3,6 +3,11 @@ const {
   EmbedBuilder,
   Collection,
   PermissionFlagsBits,
+  StringSelectMenuBuilder,
+  StringSelectMenuOptionBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  ActionRowBuilder,
 } = require("discord.js");
 const pollSchema = require("../schemas/pollSchema");
 const { generatePollBars } = require("../globalFunctions/generatePollBars");
@@ -29,49 +34,6 @@ module.exports = {
         .setDescription(`The duration of the poll, in minutes`)
         .setRequired(true)
     )
-    .addBooleanOption((option) =>
-      option
-        .setName(`sb_votable`)
-        .setDescription(`Determines whether Sky Battle is in the vote`)
-        .setRequired(true)
-    )
-    .addBooleanOption((option) =>
-      option
-        .setName(`bb_votable`)
-        .setDescription(`Determines whether Battle Box is in the vote`)
-        .setRequired(true)
-    )
-    .addBooleanOption((option) =>
-      option
-        .setName(`hitw_votable`)
-        .setDescription(`Determines whether Hole in the Wall is in the vote`)
-        .setRequired(true)
-    )
-    .addBooleanOption((option) =>
-      option
-        .setName(`tgttos_votable`)
-        .setDescription(
-          `Determines whether To Get to the Other Side is in the vote`
-        )
-        .setRequired(true)
-    )
-    .addBooleanOption((option) =>
-      option
-        .setName(`pkws_votable`)
-        .setDescription(
-          `Determines whether Parkour Warrior: Survivor is in the vote`
-        )
-        .setRequired(true)
-    )
-    /*
-    .addBooleanOption((option) =>
-      option
-        .setName(`dyb_votable`)
-        .setDescription(
-          `Determines whether Dynaball is in the vote`
-          )
-        .setRequired(true)
-        ) */
     .addStringOption((option) =>
       option
         .setName(`ending`)
@@ -104,19 +66,11 @@ module.exports = {
     ),
   async execute(interaction) {
     await interaction.deferReply({ ephemeral: true });
-    await interaction.editReply("Sending reply now!");
+    await interaction.editReply("Please wait...");
 
     //Define main variables from options of command
     const title = interaction.options.get("title").value;
     const duration = interaction.options.get("duration").value;
-    const votingOptions = [
-      interaction.options.get("sb_votable").value,
-      interaction.options.get("bb_votable").value,
-      interaction.options.get("hitw_votable").value,
-      interaction.options.get("tgttos_votable").value,
-      interaction.options.get("pkws_votable").value,
-      //interaction.options.get("dyb_votable").value,
-    ];
 
     const ending = interaction.options.get("ending").value;
 
@@ -126,162 +80,254 @@ module.exports = {
     const guild = interaction.guild;
     const guildIconColour = await getMostFrequentGuildIconColour(guild);
 
-    //Get the Unix-Discord syntax for when the poll ends
-    const pollEndTime = new Date();
-    pollEndTime.setMinutes(pollEndTime.getMinutes() + duration);
-    const pollEndTimeString = `<t:${Math.floor(
-      pollEndTime.getTime() / 1000
-    )}:R>`;
     const generatedPollId = await generatePollId();
     if (generatedPollId == "Error generating poll ID.") {
       await interaction.reply(generatedPollId);
     }
+    //Create the select menu
+    const options = [
+      {
+        label: "Battle Box",
+        value: "battleBox",
+        emoji: "1089592675595984986",
+      },
+      {
+        label: "Dynaball",
+        value: "dynaball",
+        emoji: "1155449708119072808",
+      },
+      {
+        label: "Hole in the Wall",
+        value: "holeInTheWall",
+        emoji: "1089592541663469678",
+      },
+      {
+        label: "Parkour Warrior: Survivor",
+        value: "parkourWarriorSurvivor",
+        emoji: "1128101611307278366",
+      },
+      {
+        label: "Sky Battle",
+        value: "skyBattle",
+        emoji: "1128115696832893018",
+      },
+      {
+        label: "To Get to the Other Side",
+        value: "toGetToTheOtherSide",
+        emoji: "1089592804696653906",
+      },
+    ];
 
-    //Create poll embed
-    let pollEmbed = new EmbedBuilder()
-      .setColor(guildIconColour)
-      .setTitle(title)
-      .addFields({
-        name: `Details`,
-        value: `Poll ends ${[pollEndTimeString]}`,
-        inline: false,
-      })
-      .setFooter({
-        text: `Poll ID: ${generatedPollId} | Created by: ${interaction.user.username}`,
-        iconURl: interaction.user.iconURL,
+    const gameSelect = new StringSelectMenuBuilder()
+      .setCustomId(`gameSelect-${generatedPollId}`)
+      .setPlaceholder(`Choose your games!`)
+      .setMinValues(1)
+      .setMaxValues(6)
+      .addOptions(
+        ...options.map((option) =>
+          new StringSelectMenuOptionBuilder()
+            .setLabel(option.label)
+            .setDescription(`Will ${option.label} be in this vote?`)
+            .setValue(option.value)
+            .setEmoji(option.emoji)
+            .setDefault(false)
+        )
+      );
+
+    const gameSelectRow = new ActionRowBuilder().addComponents(gameSelect);
+
+    //Edit the initial message to include the select menu
+    await interaction.editReply({
+      content: `Please select the games you wish to play!`,
+      components: [gameSelectRow],
+    });
+
+    //Create a collector for the select menu
+    const filter = (interaction) =>
+      interaction.customId === `gameSelect-${generatedPollId}`;
+    const collector = interaction.channel.createMessageComponentCollector({
+      filter,
+      time: duration * 60000,
+    });
+
+    //Once the collector has been triggered, create a list of whethere each of the games has been selected
+    collector.on("collect", async (interaction) => {
+      const selectedOptions = interaction.values;
+      const selectedGames = options.filter((option) =>
+        selectedOptions.includes(option.value)
+      );
+      const votingOptions = [
+        selectedOptions.includes("skyBattle"),
+        selectedOptions.includes("battleBox"),
+        selectedOptions.includes("holeInTheWall"),
+        selectedOptions.includes("toGetToTheOtherSide"),
+        selectedOptions.includes("parkourWarriorSurvivor"),
+        selectedOptions.includes("dynaball"),
+      ];
+
+      await interaction.reply({
+        content: `Sending vote for ${selectedGames
+          .map((game) => game.label)
+          .join(", ")}!`,
+        ephemeral: true,
       });
 
-    //Create list of all the relevant reaction emojis for this vote
-    let reactionEmojis = [];
-    if (votingOptions[0]) {
-      reactionEmojis.push("<:gameSB:1128115696832893018>");
-    }
-    if (votingOptions[1]) {
-      reactionEmojis.push("<:gameBB:1089592675595984986>");
-    }
-    if (votingOptions[2]) {
-      reactionEmojis.push("<:gameHITW:1089592541663469678>");
-    }
-    if (votingOptions[3]) {
-      reactionEmojis.push("<:gameTGTTOS:1089592804696653906>");
-    }
-    if (votingOptions[4]) {
-      reactionEmojis.push("<:gamePKWS:1128101611307278366>");
-    }
-    /*if (votingOptions[5]) {
-      reactionEmojis.push("<:gameDyB:1128101611307278366>");
-    }*/
+      //Get the Unix-Discord syntax for when the poll ends
+      const pollEndTime = new Date();
+      pollEndTime.setMinutes(pollEndTime.getMinutes() + duration);
+      const pollEndTimeString = `<t:${Math.floor(
+        pollEndTime.getTime() / 1000
+      )}:R>`;
 
-    //Send the initial poll message
-    let pollMessage = await interaction.channel.send({
-      content: `${roleID != null ? "<@&" + roleID.value + ">" : ""}`,
-      embeds: [pollEmbed],
-    });
+      let pollEmbed = new EmbedBuilder()
+        .setColor(guildIconColour)
+        .setTitle(title)
+        .addFields({
+          name: `Details`,
+          value: `Poll ends ${[pollEndTimeString]}`,
+          inline: false,
+        })
+        .setFooter({
+          text: `Poll ID: ${generatedPollId} | Created by: ${interaction.user.username}`,
+          iconURl: interaction.user.iconURL,
+        });
 
-    //Create the initial poll bars (will be 0s)
-    const pollMessageString = await generatePollBars(
-      pollMessage,
-      votingOptions
-    );
+      //Create list of all the relevant reaction emojis for this vote
+      let reactionEmojis = [];
+      if (votingOptions[0]) {
+        reactionEmojis.push("<:gameSB:1128115696832893018>");
+      }
+      if (votingOptions[1]) {
+        reactionEmojis.push("<:gameBB:1089592675595984986>");
+      }
+      if (votingOptions[2]) {
+        reactionEmojis.push("<:gameHITW:1089592541663469678>");
+      }
+      if (votingOptions[3]) {
+        reactionEmojis.push("<:gameTGTTOS:1089592804696653906>");
+      }
+      if (votingOptions[4]) {
+        reactionEmojis.push("<:gamePKWS:1128101611307278366>");
+      }
+      if (votingOptions[5]) {
+        reactionEmojis.push("<:gameDyB:1155449708119072808>");
+      }
 
-    pollEmbed.setDescription(pollMessageString);
-    await pollMessage.edit({ embeds: [pollEmbed] });
+      //Send the initial poll message
+      let pollMessage = await interaction.channel.send({
+        content: `${roleID != null ? "<@&" + roleID.value + ">" : ""}`,
+        embeds: [pollEmbed],
+      });
 
-    //React all the reactions
-    for (const reaction of reactionEmojis) {
-      pollMessage.react(reaction);
-    }
+      //Create the initial poll bars (will be 0s)
+      const pollMessageString = await generatePollBars(
+        pollMessage,
+        votingOptions
+      );
 
-    //Add to database
-    pollSchema.create({
-      pollId: generatedPollId,
-      messageId: pollMessage.id,
-      ownerId: interaction.user.id,
-      endUnix: Math.floor(pollEndTime.getTime() / 1000),
-      channelId: interaction.channel.id,
-      votingOptions: votingOptions,
-      title: title,
-      ending: ending,
-      active: true,
-    });
+      pollEmbed.setDescription(pollMessageString);
+      await pollMessage.edit({ embeds: [pollEmbed] });
 
-    //Reaction listener for reaction adds
-    interaction.client.on("messageReactionAdd", async (reaction, user) => {
-      //Check that the reaction is not a partial
-      if (reaction.message.partial) await reaction.message.fetch();
-      if (reaction.partial) await reaction.fetch();
+      //React all the reactions
+      for (const reaction of reactionEmojis) {
+        pollMessage.react(reaction);
+      }
 
-      // Get database value for this poll
-      const currentPoll = await pollSchema.findOne({ pollId: generatedPollId });
+      //Add to database
+      pollSchema.create({
+        pollId: generatedPollId,
+        messageId: pollMessage.id,
+        ownerId: interaction.user.id,
+        endUnix: Math.floor(pollEndTime.getTime() / 1000),
+        channelId: interaction.channel.id,
+        votingOptions: votingOptions,
+        title: title,
+        ending: ending,
+        active: true,
+      });
 
-      /*Check if:
+      //Reaction listener for reaction adds
+      interaction.client.on("messageReactionAdd", async (reaction, user) => {
+        //Check that the reaction is not a partial
+        if (reaction.message.partial) await reaction.message.fetch();
+        if (reaction.partial) await reaction.fetch();
+
+        // Get database value for this poll
+        const currentPoll = await pollSchema.findOne({
+          pollId: generatedPollId,
+        });
+
+        /*Check if:
       the reactor is not a bot,
       if the reaction is in a DM,
       if the message reacted to is the poll for this interaction,
       if the poll has ended and return if any are true */
-      if (
-        user.bot ||
-        !reaction.message.guild ||
-        pollMessage.id != reaction.message.id ||
-        !currentPoll.active
-      )
-        return;
-
-      //No new reactions emojis can be added
-      if (!reactionEmojis.includes(reaction._emoji.toString())) {
-        reaction.users.remove(user.id).catch(console.error);
-      }
-
-      const listOfReactions = pollMessage.reactions.cache.values();
-
-      //No new reactions emojis can be added
-      for (const iteratedReaction of listOfReactions) {
-        // If the reaction is the one the user just added, skip it
-        if (iteratedReaction.emoji.name === reaction.emoji.name) continue;
-
-        // If the reaction was added by the user, remove it
-        if (iteratedReaction.users.cache.has(user.id)) {
-          await iteratedReaction.users.remove(user.id);
-        }
-      }
-
-      //Limit reactions to member if need be
-      if (roleID != null) {
-        const member = await interaction.guild.members.fetch(user.id);
-        if (!member.roles.cache.has(roleID.value)) {
-          reaction.users.remove(user.id).catch(console.error);
+        if (
+          user.bot ||
+          !reaction.message.guild ||
+          pollMessage.id != reaction.message.id ||
+          !currentPoll.active
+        )
           return;
+
+        //No new reactions emojis can be added
+        if (!reactionEmojis.includes(reaction._emoji.toString())) {
+          reaction.users.remove(user.id).catch(console.error);
         }
-      }
 
-      const pollMessageString = await generatePollBars(
-        pollMessage,
-        votingOptions
-      );
-      pollEmbed.setDescription(pollMessageString);
-      await pollMessage.edit({ embeds: [pollEmbed] });
-    });
+        const listOfReactions = pollMessage.reactions.cache.values();
 
-    interaction.client.on("messageReactionRemove", async (reaction, user) => {
-      if (reaction.message.partial) await reaction.message.fetch();
-      if (reaction.partial) await reaction.fetch();
+        //No new reactions emojis can be added
+        for (const iteratedReaction of listOfReactions) {
+          // If the reaction is the one the user just added, skip it
+          if (iteratedReaction.emoji.name === reaction.emoji.name) continue;
 
-      const currentPoll = await pollSchema.findOne({ pollId: generatedPollId });
+          // If the reaction was added by the user, remove it
+          if (iteratedReaction.users.cache.has(user.id)) {
+            await iteratedReaction.users.remove(user.id);
+          }
+        }
 
-      if (
-        user.bot ||
-        !reaction.message.guild ||
-        pollMessage.id != reaction.message.id ||
-        !currentPoll.active
-      )
-        return;
+        //Limit reactions to member if need be
+        if (roleID != null) {
+          const member = await interaction.guild.members.fetch(user.id);
+          if (!member.roles.cache.has(roleID.value)) {
+            reaction.users.remove(user.id).catch(console.error);
+            return;
+          }
+        }
 
-      const pollMessageString = await generatePollBars(
-        pollMessage,
-        votingOptions
-      );
-      pollEmbed.setDescription(pollMessageString);
-      await pollMessage.edit({ embeds: [pollEmbed] });
+        const pollMessageString = await generatePollBars(
+          pollMessage,
+          votingOptions
+        );
+        pollEmbed.setDescription(pollMessageString);
+        await pollMessage.edit({ embeds: [pollEmbed] });
+      });
+
+      interaction.client.on("messageReactionRemove", async (reaction, user) => {
+        if (reaction.message.partial) await reaction.message.fetch();
+        if (reaction.partial) await reaction.fetch();
+
+        const currentPoll = await pollSchema.findOne({
+          pollId: generatedPollId,
+        });
+
+        if (
+          user.bot ||
+          !reaction.message.guild ||
+          pollMessage.id != reaction.message.id ||
+          !currentPoll.active
+        )
+          return;
+
+        const pollMessageString = await generatePollBars(
+          pollMessage,
+          votingOptions
+        );
+        pollEmbed.setDescription(pollMessageString);
+        await pollMessage.edit({ embeds: [pollEmbed] });
+      });
     });
   },
 };
