@@ -151,8 +151,10 @@ module.exports = {
     });
 
     //Once the collector has been triggered, create a list of whethere each of the games has been selected
-    collector.on("collect", async (interaction) => {
-      const selectedOptions = interaction.values;
+    collector.on("collect", async (interactionCollector) => {
+      //Delete the initial message
+      await interaction.deleteReply();
+      const selectedOptions = interactionCollector.values;
       const selectedGames = options.filter((option) =>
         selectedOptions.includes(option.value)
       );
@@ -165,7 +167,7 @@ module.exports = {
         selectedOptions.includes("dynaball"),
       ];
 
-      await interaction.reply({
+      await interactionCollector.reply({
         content: `Sending vote for ${selectedGames
           .map((game) => game.label)
           .join(", ")}!`,
@@ -188,8 +190,8 @@ module.exports = {
           inline: false,
         })
         .setFooter({
-          text: `Poll ID: ${generatedPollId} | Created by: ${interaction.user.username}`,
-          iconURl: interaction.user.iconURL,
+          text: `Poll ID: ${generatedPollId} | Created by: ${interactionCollector.user.username}`,
+          iconURl: interactionCollector.user.iconURL,
         });
 
       //Create list of all the relevant reaction emojis for this vote
@@ -214,7 +216,7 @@ module.exports = {
       }
 
       //Send the initial poll message
-      let pollMessage = await interaction.channel.send({
+      let pollMessage = await interactionCollector.channel.send({
         content: `${roleID != null ? "<@&" + roleID.value + ">" : ""}`,
         embeds: [pollEmbed],
       });
@@ -237,9 +239,9 @@ module.exports = {
       pollSchema.create({
         pollId: generatedPollId,
         messageId: pollMessage.id,
-        ownerId: interaction.user.id,
+        ownerId: interactionCollector.user.id,
         endUnix: Math.floor(pollEndTime.getTime() / 1000),
-        channelId: interaction.channel.id,
+        channelId: interactionCollector.channel.id,
         votingOptions: votingOptions,
         title: title,
         ending: ending,
@@ -247,87 +249,93 @@ module.exports = {
       });
 
       //Reaction listener for reaction adds
-      interaction.client.on("messageReactionAdd", async (reaction, user) => {
-        //Check that the reaction is not a partial
-        if (reaction.message.partial) await reaction.message.fetch();
-        if (reaction.partial) await reaction.fetch();
+      interactionCollector.client.on(
+        "messageReactionAdd",
+        async (reaction, user) => {
+          //Check that the reaction is not a partial
+          if (reaction.message.partial) await reaction.message.fetch();
+          if (reaction.partial) await reaction.fetch();
 
-        // Get database value for this poll
-        const currentPoll = await pollSchema.findOne({
-          pollId: generatedPollId,
-        });
+          // Get database value for this poll
+          const currentPoll = await pollSchema.findOne({
+            pollId: generatedPollId,
+          });
 
-        /*Check if:
+          /*Check if:
       the reactor is not a bot,
       if the reaction is in a DM,
       if the message reacted to is the poll for this interaction,
       if the poll has ended and return if any are true */
-        if (
-          user.bot ||
-          !reaction.message.guild ||
-          pollMessage.id != reaction.message.id ||
-          !currentPoll.active
-        )
-          return;
-
-        //No new reactions emojis can be added
-        if (!reactionEmojis.includes(reaction._emoji.toString())) {
-          reaction.users.remove(user.id).catch(console.error);
-        }
-
-        const listOfReactions = pollMessage.reactions.cache.values();
-
-        //No new reactions emojis can be added
-        for (const iteratedReaction of listOfReactions) {
-          // If the reaction is the one the user just added, skip it
-          if (iteratedReaction.emoji.name === reaction.emoji.name) continue;
-
-          // If the reaction was added by the user, remove it
-          if (iteratedReaction.users.cache.has(user.id)) {
-            await iteratedReaction.users.remove(user.id);
-          }
-        }
-
-        //Limit reactions to member if need be
-        if (roleID != null) {
-          const member = await interaction.guild.members.fetch(user.id);
-          if (!member.roles.cache.has(roleID.value)) {
-            reaction.users.remove(user.id).catch(console.error);
+          if (
+            user.bot ||
+            !reaction.message.guild ||
+            pollMessage.id != reaction.message.id ||
+            !currentPoll.active
+          )
             return;
+
+          //No new reactions emojis can be added
+          if (!reactionEmojis.includes(reaction._emoji.toString())) {
+            reaction.users.remove(user.id).catch(console.error);
           }
+
+          const listOfReactions = pollMessage.reactions.cache.values();
+
+          //No new reactions emojis can be added
+          for (const iteratedReaction of listOfReactions) {
+            // If the reaction is the one the user just added, skip it
+            if (iteratedReaction.emoji.name === reaction.emoji.name) continue;
+
+            // If the reaction was added by the user, remove it
+            if (iteratedReaction.users.cache.has(user.id)) {
+              await iteratedReaction.users.remove(user.id);
+            }
+          }
+
+          //Limit reactions to member if need be
+          if (roleID != null) {
+            const member = await interaction.guild.members.fetch(user.id);
+            if (!member.roles.cache.has(roleID.value)) {
+              reaction.users.remove(user.id).catch(console.error);
+              return;
+            }
+          }
+
+          const pollMessageString = await generatePollBars(
+            pollMessage,
+            votingOptions
+          );
+          pollEmbed.setDescription(pollMessageString);
+          await pollMessage.edit({ embeds: [pollEmbed] });
         }
+      );
 
-        const pollMessageString = await generatePollBars(
-          pollMessage,
-          votingOptions
-        );
-        pollEmbed.setDescription(pollMessageString);
-        await pollMessage.edit({ embeds: [pollEmbed] });
-      });
+      interactionCollector.client.on(
+        "messageReactionRemove",
+        async (reaction, user) => {
+          if (reaction.message.partial) await reaction.message.fetch();
+          if (reaction.partial) await reaction.fetch();
 
-      interaction.client.on("messageReactionRemove", async (reaction, user) => {
-        if (reaction.message.partial) await reaction.message.fetch();
-        if (reaction.partial) await reaction.fetch();
+          const currentPoll = await pollSchema.findOne({
+            pollId: generatedPollId,
+          });
 
-        const currentPoll = await pollSchema.findOne({
-          pollId: generatedPollId,
-        });
+          if (
+            user.bot ||
+            !reaction.message.guild ||
+            pollMessage.id != reaction.message.id ||
+            !currentPoll.active
+          )
+            return;
 
-        if (
-          user.bot ||
-          !reaction.message.guild ||
-          pollMessage.id != reaction.message.id ||
-          !currentPoll.active
-        )
-          return;
-
-        const pollMessageString = await generatePollBars(
-          pollMessage,
-          votingOptions
-        );
-        pollEmbed.setDescription(pollMessageString);
-        await pollMessage.edit({ embeds: [pollEmbed] });
-      });
+          const pollMessageString = await generatePollBars(
+            pollMessage,
+            votingOptions
+          );
+          pollEmbed.setDescription(pollMessageString);
+          await pollMessage.edit({ embeds: [pollEmbed] });
+        }
+      );
     });
   },
 };
