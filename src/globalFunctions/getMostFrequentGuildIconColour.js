@@ -5,7 +5,7 @@ const Jimp = require("jimp");
  * Gets the most frequent colour in a guild's icon
  * @param {Guild} guild The guild to get the icon colour of
  * @param {number} [stepSize=1] The step size to use when iterating over the image
- * @returns {Promise<string>} The most frequent colour in the guild's icon
+ * @returns {Promise<number[]>} The most frequent RGB color in the guild's icon as an array
  * */
 async function getMostFrequentGuildIconColour(guild, stepSize = 1) {
   const iconURL = guild.iconURL({ extension: "png" });
@@ -22,13 +22,14 @@ async function getMostFrequentGuildIconColour(guild, stepSize = 1) {
   for (let y = 0; y < image.getHeight(); y += stepSize) {
     for (let x = 0; x < image.getWidth(); x += stepSize) {
       const { r, g, b } = Jimp.intToRGBA(image.getPixelColor(x, y));
-      const colorHex = rgbToHex(r, g, b);
+      const colorRGB = [r, g, b];
 
-      if (!pixelCounts[colorHex]) {
-        pixelCounts[colorHex] = 0;
+      const colorKey = colorRGB.join(",");
+      if (!pixelCounts[colorKey]) {
+        pixelCounts[colorKey] = 0;
       }
 
-      pixelCounts[colorHex]++;
+      pixelCounts[colorKey]++;
     }
   }
 
@@ -36,18 +37,7 @@ async function getMostFrequentGuildIconColour(guild, stepSize = 1) {
     pixelCounts[a] > pixelCounts[b] ? a : b
   );
 
-  return mostFrequentColor;
-}
-
-/**
- * Converts RGB values to hex
- * @param {number} r The red value
- * @param {number} g The green value
- * @param {number} b The blue value
- * @returns {string} The hex value
- */
-function rgbToHex(r, g, b) {
-  return "#" + ((r << 16) | (g << 8) | b).toString(16).padStart(6, "0");
+  return mostFrequentColor.split(",").map(Number);
 }
 
 module.exports = { getMostFrequentGuildIconColour };
