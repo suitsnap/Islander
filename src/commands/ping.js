@@ -12,19 +12,11 @@ module.exports = {
         )
     ),
   async execute(interaction) {
-    const websocketBool = interaction.options.get("websocket") ?? false;
-    if (!websocketBool) {
-      return await interaction.reply({
-        content: `Pong! - Client: ${
-          Date.now() - interaction.createdTimestamp
-        }ms`,
-        ephemeral: true,
-      });
-    } else {
-      return await interaction.reply({
-        content: `Pong! - Websocket: ${interaction.client.ws.ping}ms`,
-        ephemeral: true,
-      });
-    }
+    const isWebsocket = interaction.options.getBoolean("websocket") || false;
+    const content = isWebsocket
+      ? `Pong! - Websocket: ${interaction.client.ws.ping}ms`
+      : `Pong! - Client: ${Date.now() - interaction.createdTimestamp}ms`;
+
+    await interaction.reply({ content, ephemeral: true });
   },
 };
