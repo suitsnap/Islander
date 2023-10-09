@@ -12,11 +12,11 @@
 
 /ping - Details about the bot's ping through both the client and the websocket. Options: [websocket - boolean]
 
-/begin_vote - Creates a vote for the next game in a tournament. Options: [title - string {R}, duration - integer {R}, sb_votable - boolean {R}, bb_votable - boolean {R}, hitw_votable - boolean {R}, tgttos_votable - boolean {R}, role - role, weighted - boolean]
+/begin_vote - Creates a vote for the next game in a tournament. Options: [title - string {R}, duration - integer {R}, ending - string {R}, role - role]
 
 ### /generate_team - main command of subcommands:
 
-/generate_team with_discord - Generates a team image using Discord avatars. Options: [team - string {C + R}, user_one - user {R}, user_two - user {R}, user_three - user {R}, user_four - user {R}, event_number - integer, emblem - attachment]
+/generate_team with_discord - Generates a team image using Discord avatars. Options: [team - string {C + R}, user_one - user {R}, user_two - user {R}, user_three - user {R}, user_four - user {R}, event_number - integer, emblem - attachment, name_override - boolean]
 
 /generate_team with_minecraft - Generates a team image using Minecraft skin faces. Options: [team - string {C + R}, player_one - string {R}, player_two - string {R}, player_three - string {R}, player_four - string {R}, event_number - integer, emblem - attachment]
 

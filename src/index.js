@@ -41,16 +41,23 @@ const statusOptions = [
   ["Parkour Warrior: Dojo", ActivityType.Playing],
   ["play.mccisland.net", ActivityType.Playing],
   ["MCC Island Speedruns", ActivityType.Watching],
-  ["Admin Streams", ActivityType.Streaming],
+  ["Admin Streams", ActivityType.Streaming, "https://twitch.tv/thenoxcrew"],
   ["the MCC Soundtrack", ActivityType.Listening],
   ["IW Tournaments", ActivityType.Competing],
 ];
 let statusIndex = 0;
 
+/**
+ * Updates the bot's status to the next status in the list every 5 seconds
+ */
 function updateStatus() {
   const newStatus = statusOptions[statusIndex];
+  const activities = [{ name: newStatus[0], type: newStatus[1]}];
+  if (newStatus[1] === ActivityType.Streaming && newStatus[2]) {
+    activities[0].url = newStatus[2];
+  }
   client.user.setPresence({
-    activities: [{ name: newStatus[0], type: newStatus[1] }],
+    activities,
     status: "online",
   });
   statusIndex = (statusIndex + 1) % statusOptions.length;
@@ -102,6 +109,11 @@ getCommands(scheduledEventsPath, (command) => {
   });
 });
 
+/**
+ * Gets all the commands in a directory
+ * @param {string} dir The directory to get the commands from
+ * @param {Function} callback The callback function to run on each command
+ */
 function getCommands(dir, callback) {
   const files = fs.readdirSync(dir).filter((file) => file.endsWith(".js"));
 
@@ -153,7 +165,7 @@ process.on("uncaughtExceptionMonitor", (err, origin) => {
 });
 
 client.on("error", (err) => {
-  console.log(red + "ERROR - Discord.js Error" + reset, `Error: ${err}`);
+  console.log(red + "ERROR - Discord.js Error in Index" + reset, `Error: ${err}`);
 });
 
 client.on("guildCreate", (guild) => {
@@ -205,7 +217,7 @@ client.on("interactionCreate", async (interaction) => {
   try {
     await command.execute(interaction);
   } catch (error) {
-    console.log(red + "ERROR - Discord.js Error" + reset, `Error: ${error}`);
+    console.log(red + "ERROR - Discord.js Error in Command" + reset, `Error: ${error}`);
     await interaction.reply({
       content: "There was an error executing this command",
     });
@@ -261,7 +273,6 @@ client.on("voiceStateUpdate", async (oldState, newState) => {
   ) {
     return;
   }
-  console.log("made it");
   try {
     if (newState.channel.id === joinToCreateChannelId) {
       const guild = newState.guild;

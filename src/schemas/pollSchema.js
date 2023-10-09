@@ -7,7 +7,8 @@ let pollSchema = new Schema({
   endUnix: String,
   channelId: String,
   votingOptions: [Boolean],
-  weighted: Boolean,
+  ending: String,
+  title: String,
   active: Boolean,
 });
 

@@ -1,3 +1,8 @@
+/** 
+ * Returns a string with a progress bar based on the percentage given
+ * @param {number} percentage - The percentage of the bar that should be filled
+ * @returns {string} - The string with the progress bar
+* */
 function getBar(percentage) {
   let bar = "[";
   if (percentage === 0) {

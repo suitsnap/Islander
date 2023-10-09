@@ -1,3 +1,8 @@
+/**
+ * Formats a date to a string 
+ * @param {Date} date The date to format
+ * @returns {string} The formatted date
+ * */
 function formatDateTime(date) {
   const options = {
     hour: "2-digit",
