@@ -3,7 +3,7 @@ const { model, Schema } = require("mongoose");
 let teamChannelSchema = new Schema({
   guildId: String,
   teams: {
-    type: [String, String, Schema.Types.Mixed],
+    type: [[String, String, Schema.Types.Mixed]],
     validate: {
       validator: function (arr) {
         return arr.every((subArr) => {

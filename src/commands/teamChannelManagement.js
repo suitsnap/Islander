@@ -6,7 +6,7 @@ const {
   ActionRowBuilder,
 } = require("@discordjs/builders");
 const { ButtonStyle } = require("discord-api-types/v9");
-const teamChannelSchema = require("../schemas/teamChannelSchema");
+const teamChannelSchema = require("../schemas/teamChannelSchema.js");
 const { model, Schema } = require("mongoose");
 const { ChannelType } = require("discord.js");
 const {
@@ -15,8 +15,8 @@ const {
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName("team_channel")
-    .setDescription("Manage the team channels for your server.")
+    .setName("manage_teams")
+    .setDescription("Manage the teams for your server.")
     .addSubcommand((subcommand) =>
       subcommand
         .setName("add")
@@ -44,7 +44,7 @@ module.exports = {
     )
     .addSubcommand((subcommand) =>
       subcommand
-        .setName("ready")
+        .setName("ready_check")
         .setDescription("Send a ready check to all the teams in your list.")
     )
     .addSubcommand((subcommand) =>
@@ -71,6 +71,11 @@ module.exports = {
       subcommand
         .setName("purge")
         .setDescription("Removes all messages from all team channels.")
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName("role_remove")
+        .setDescription("Removes all the team roles registered in the server.")
     ),
   async execute(interaction) {
     const subcommand = interaction.options.getSubcommand();
@@ -84,7 +89,7 @@ module.exports = {
         await viewChannels(interaction);
         break;
 
-      case "ready":
+      case "ready_check":
         await readyCheck(interaction);
         break;
 
@@ -98,6 +103,9 @@ module.exports = {
 
       case "purge":
         await purgeChannels(interaction);
+        break;
+      case "role_remove":
+        await removeTeamRoles(interaction);
         break;
     }
   },
@@ -428,29 +436,13 @@ async function purgeChannels(interaction) {
 
   teamChannels.teams.forEach(async (team) => {
     const channel = interaction.guild.channels.cache.get(team[0]);
-    let messages = await channel.messages.fetch();
-
-    while (messages.size > 0) {
-      const messageCount = messages.size;
-      console.log(messageCount);
-      await channel.bulkDelete(50, true);
-      await new Promise((resolve) => setTimeout(resolve, 3000));
-      messages = await channel.messages.fetch();
-    }
+    await channel.bulkDelete(100, true);
   });
 
   teamChannels.teams.forEach(async (team) => {
     if (team[2] == null) return;
     const channel = interaction.guild.channels.cache.get(team[2]);
-    let messages = await channel.messages.fetch();
-
-    while (messages.size > 0) {
-      const messageCount = messages.size;
-      console.log(messageCount);
-      await channel.bulkDelete(50, true);
-      await new Promise((resolve) => setTimeout(resolve, 3000));
-      messages = await channel.messages.fetch();
-    }
+    await channel.bulkDelete(100, true);
   });
 
   const embed = new EmbedBuilder()
@@ -461,4 +453,31 @@ async function purgeChannels(interaction) {
     .setColor(guildIconColour);
 
   await interaction.editReply({ embeds: [embed] });
+}
+/**
+ * Removes all the team  registered in the server from the members that have them.
+ * @param {CommandInteraction} interaction The interaction that triggered this command
+ * */
+async function removeTeamRoles(interaction) {
+  const teamChannels = await teamChannelSchema.findOne({
+    guildId: interaction.guild.id,
+  });
+
+  if (!teamChannels || teamChannels.teams.length == 0) {
+    return await interaction.reply({
+      content: `You don't have any team channels set up.`,
+      ephemeral: true,
+    });
+  }
+
+  teamChannels.teams.forEach(async (team) => {
+    const role = interaction.guild.roles.cache.get(team[1]);
+    const members = role.members;
+    members.forEach(async (member) => {
+      await member.roles.remove(role);
+    });
+    await new Promise(resolve => setTimeout(resolve,2500));
+  });
+
+  await interaction.reply("Removed all team roles from members that had them.");
 }

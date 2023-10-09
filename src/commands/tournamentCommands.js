@@ -1,4 +1,6 @@
 const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
+const teamChannelSchema = require("../schemas/teamChannelSchema");
+const { model, Schema } = require("mongoose");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -74,7 +76,7 @@ module.exports = {
           option
             .setName("tournament_role")
             .setDescription(
-              "The tournament role that you wish to swap e.g. Team"
+              "The tournament role that you wish to add e.g. Team"
             )
             .setRequired(true)
         )
@@ -82,95 +84,110 @@ module.exports = {
           option
             .setName("extra_tournament_role")
             .setDescription(
-              "Another tournament role that you wish to swap e.g. Participant"
+              "Another tournament role that you wish to add e.g. Participant"
             )
         )
-    ),
+    )
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
   async execute(interaction) {
     const subcommand = interaction.options.getSubcommand();
     switch (subcommand) {
       case "substitute":
-        const originalPlayer = interaction.options.getUser("original_player");
-        const newPlayer = interaction.options.getUser("new_player");
-        const tournamentRoleForSubstitute =
-          interaction.options.getRole("tournament_role");
-        const extraTournamentRoleForSubstitute = interaction.options.getRole(
-          "extra_tournament_role"
-        );
-
-        const guild = interaction.guild;
-        const originalMember = await guild.members.fetch(originalPlayer.id);
-        const newMember = await guild.members.fetch(newPlayer.id);
-
-        if (!originalMember.roles.cache.has(tournamentRoleForSubstitute.id)) {
-          return await interaction.reply(
-            `Original user does not have Role: ${tournamentRoleForSubstitute.name}`
-          );
-        }
-
-        await originalMember.roles.remove(tournamentRoleForSubstitute);
-        await newMember.roles.add(tournamentRoleForSubstitute);
-
-        let messageContent = `Removed Role: ${tournamentRoleForSubstitute.name} from ${originalMember.displayName}\nAdded Role: ${tournamentRoleForSubstitute.name} to ${newMember.displayName}\n`;
-
-        if (extraTournamentRoleForSubstitute) {
-          if (
-            !originalMember.roles.cache.has(extraTournamentRoleForSubstitute.id)
-          ) {
-            return await interaction.reply(
-              `Original user does not have Role: ${extraTournamentRoleForSubstitute.name}`
-            );
-          }
-          await originalMember.roles.remove(extraTournamentRoleForSubstitute);
-          await newMember.roles.add(extraTournamentRoleForSubstitute);
-          messageContent += `Also removed Role - ${extraTournamentRoleForSubstitute.name} from ${originalMember.displayName}\nAdded Role - ${extraTournamentRoleForSubstitute.name} to ${newMember.displayName}`;
-        }
-
-        await interaction.reply(messageContent);
-
+        substitutePlayer(interaction);
         break;
       case "team_role_give":
-        const tournamentRoleForTeam =
-          interaction.options.getRole("tournament_role");
-        const extraTournamentRoleForTeam = interaction.options.getRole(
-          "extra_tournament_role"
-        );
-
-        const userArray = [
-          interaction.options.getUser("player_one"),
-          interaction.options.getUser("player_two"),
-          interaction.options.getUser("player_three"),
-          interaction.options.getUser("player_four"),
-        ];
-
-        //Ensure all the users are different users
-        const userSet = new Set(userArray);
-        if (userSet.size !== userArray.length) {
-          return await interaction.reply(
-            "You cannot have duplicate users in the command."
-          );
-        }
-
-        let message = `### Added roles to members.\n**Roles:**\n${tournamentRoleForTeam.name}`;
-        if (extraTournamentRoleForTeam) {
-          message += `, ${extraTournamentRoleForTeam.name}`;
-        }
-        message += "\n**Members:**\n";
-
-        for (const user of userArray) {
-          const member = await interaction.guild.members.fetch(user.id);
-          await member.roles.add(tournamentRoleForTeam);
-          message += `${member.displayName}\n`;
-
-          if (extraTournamentRoleForTeam) {
-            await member.roles.add(extraTournamentRoleForTeam);
-          }
-        }
-
-        await interaction.reply({
-          content: message,
-        });
+        givePlayersTournamentRoles(interaction);
         break;
     }
   },
 };
+
+
+
+/**
+ * Substitutes a player in a tournament
+ * @param {CommandInteraction} interaction The interaction that triggered this command
+ * */
+async function substitutePlayer(interaction) {
+  const originalPlayer = interaction.options.getUser("original_player");
+  const newPlayer = interaction.options.getUser("new_player");
+  const tournamentRoleForSubstitute =
+    interaction.options.getRole("tournament_role");
+  const extraTournamentRoleForSubstitute = interaction.options.getRole(
+    "extra_tournament_role"
+  );
+
+  const guild = interaction.guild;
+  const originalMember = await guild.members.fetch(originalPlayer.id);
+  const newMember = await guild.members.fetch(newPlayer.id);
+
+  if (!originalMember.roles.cache.has(tournamentRoleForSubstitute.id)) {
+    return await interaction.reply(
+      `Original user does not have Role: ${tournamentRoleForSubstitute.name}`
+    );
+  }
+
+  await originalMember.roles.remove(tournamentRoleForSubstitute);
+  await newMember.roles.add(tournamentRoleForSubstitute);
+
+  let messageContent = `Removed Role: ${tournamentRoleForSubstitute.name} from ${originalMember.displayName}\nAdded Role: ${tournamentRoleForSubstitute.name} to ${newMember.displayName}\n`;
+
+  if (extraTournamentRoleForSubstitute) {
+    if (!originalMember.roles.cache.has(extraTournamentRoleForSubstitute.id)) {
+      return await interaction.reply(
+        `Original user does not have Role: ${extraTournamentRoleForSubstitute.name}`
+      );
+    }
+    await originalMember.roles.remove(extraTournamentRoleForSubstitute);
+    await newMember.roles.add(extraTournamentRoleForSubstitute);
+    messageContent += `Also removed Role - ${extraTournamentRoleForSubstitute.name} from ${originalMember.displayName}\nAdded Role - ${extraTournamentRoleForSubstitute.name} to ${newMember.displayName}`;
+  }
+
+  await interaction.reply(messageContent);
+}
+
+/**
+ * Gives a player the tournament roles
+ * @param {CommandInteraction} interaction The interaction that triggered this command
+ * */
+async function givePlayersTournamentRoles(interaction) {
+  const tournamentRoleForTeam = interaction.options.getRole("tournament_role");
+  const extraTournamentRoleForTeam = interaction.options.getRole(
+    "extra_tournament_role"
+  );
+
+  const userArray = [
+    interaction.options.getUser("player_one"),
+    interaction.options.getUser("player_two"),
+    interaction.options.getUser("player_three"),
+    interaction.options.getUser("player_four"),
+  ];
+
+  //Ensure all the users are different users
+  const userSet = new Set(userArray);
+  if (userSet.size !== userArray.length) {
+    return await interaction.reply(
+      "You cannot have duplicate users in the command."
+    );
+  }
+
+  let message = `### Added roles to members.\n**Roles:**\n${tournamentRoleForTeam.name}`;
+  if (extraTournamentRoleForTeam) {
+    message += `, ${extraTournamentRoleForTeam.name}`;
+  }
+  message += "\n**Members:**\n";
+
+  for (const user of userArray) {
+    const member = await interaction.guild.members.fetch(user.id);
+    await member.roles.add(tournamentRoleForTeam);
+    message += `${member.displayName}\n`;
+
+    if (extraTournamentRoleForTeam) {
+      await member.roles.add(extraTournamentRoleForTeam);
+    }
+  }
+
+  await interaction.reply({
+    content: message,
+  });
+}

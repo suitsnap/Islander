@@ -10,6 +10,7 @@ const {
   ActionRowBuilder,
 } = require("discord.js");
 const pollSchema = require("../schemas/pollSchema");
+const gameSchema = require("../schemas/gameSchema");
 const { generatePollBars } = require("../globalFunctions/generatePollBars");
 const {
   getMostFrequentGuildIconColour,
@@ -84,39 +85,23 @@ module.exports = {
     if (generatedPollId == "Error generating poll ID.") {
       await interaction.reply(generatedPollId);
     }
-    //Create the select menu
-    const options = [
-      {
-        label: "Battle Box",
-        value: "battleBox",
-        emoji: "1089592675595984986",
-      },
-      {
-        label: "Dynaball",
-        value: "dynaball",
-        emoji: "1155449708119072808",
-      },
-      {
-        label: "Hole in the Wall",
-        value: "holeInTheWall",
-        emoji: "1089592541663469678",
-      },
-      {
-        label: "Parkour Warrior: Survivor",
-        value: "parkourWarriorSurvivor",
-        emoji: "1128101611307278366",
-      },
-      {
-        label: "Sky Battle",
-        value: "skyBattle",
-        emoji: "1128115696832893018",
-      },
-      {
-        label: "To Get to the Other Side",
-        value: "toGetToTheOtherSide",
-        emoji: "1089592804696653906",
-      },
-    ];
+    //Create the select menu for the games from the database
+    const games = await gameSchema.find();
+    let options = games.map((game) => {
+      return {
+        label: game.name,
+        value: game.value,
+        emoji: game.emoji,
+      };
+    });
+
+    //Filter out games that have have any fields undefined
+    options = options.filter(
+      (option) =>
+        option.label != undefined &&
+        option.value != undefined &&
+        option.emoji != undefined
+    );
 
     const gameSelect = new StringSelectMenuBuilder()
       .setCustomId(`gameSelect-${generatedPollId}`)
@@ -159,13 +144,14 @@ module.exports = {
         selectedOptions.includes(option.value)
       );
       const votingOptions = [
-        selectedOptions.includes("skyBattle"),
         selectedOptions.includes("battleBox"),
-        selectedOptions.includes("holeInTheWall"),
-        selectedOptions.includes("toGetToTheOtherSide"),
-        selectedOptions.includes("parkourWarriorSurvivor"),
         selectedOptions.includes("dynaball"),
+        selectedOptions.includes("holeInTheWall"),
+        selectedOptions.includes("parkourWarriorSurvivor"),
+        selectedOptions.includes("skyBattle"),
+        selectedOptions.includes("toGetToTheOtherSide"),
       ];
+      
 
       await interactionCollector.reply({
         content: `Sending vote for ${selectedGames
@@ -197,22 +183,22 @@ module.exports = {
       //Create list of all the relevant reaction emojis for this vote
       let reactionEmojis = [];
       if (votingOptions[0]) {
-        reactionEmojis.push("<:gameSB:1128115696832893018>");
+        reactionEmojis.push("<:gameBB:1089592675595984986>");
       }
       if (votingOptions[1]) {
-        reactionEmojis.push("<:gameBB:1089592675595984986>");
+        reactionEmojis.push("<:gameDyB:1155449708119072808>");
       }
       if (votingOptions[2]) {
         reactionEmojis.push("<:gameHITW:1089592541663469678>");
       }
       if (votingOptions[3]) {
-        reactionEmojis.push("<:gameTGTTOS:1089592804696653906>");
-      }
-      if (votingOptions[4]) {
         reactionEmojis.push("<:gamePKWS:1128101611307278366>");
       }
+      if (votingOptions[4]) {
+        reactionEmojis.push("<:gameSB:1128115696832893018>");
+      }
       if (votingOptions[5]) {
-        reactionEmojis.push("<:gameDyB:1155449708119072808>");
+        reactionEmojis.push("<:gameTGTTOS:1089592804696653906>");
       }
 
       //Send the initial poll message

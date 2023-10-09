@@ -2,6 +2,10 @@ const {
   SlashCommandBuilder,
   AttachmentBuilder,
   PermissionFlagsBits,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
+  ActionRowBuilder,
 } = require("discord.js");
 const { createCanvas, loadImage, GlobalFonts } = require("@napi-rs/canvas");
 
@@ -74,6 +78,13 @@ module.exports = {
             .setName("emblem")
             .setDescription(
               "Puts a small logo at the bottom of your team image."
+            )
+        )
+        .addBooleanOption((option) =>
+          option
+            .setName("name_override")
+            .setDescription(
+              "Allows you to override the names in the image with your own text."
             )
         )
     )
@@ -236,7 +247,12 @@ module.exports = {
       "./src/fonts/Minecrafter.Reg.ttf",
       "MinecrafterFont"
     );
-    await interaction.deferReply();
+
+    const override = interaction.options.getBoolean("name_override");
+    if (!override) {
+      await interaction.deferReply();
+    }
+
     const attachment = interaction.options.getAttachment("emblem");
     if (
       attachment &&
@@ -247,270 +263,257 @@ module.exports = {
       });
       return;
     }
-    try {
-      if (interaction.options.getSubcommand() == "with_discord") {
-        const teamFilename = interaction.options.getString("team");
-        const userArray = [
-          interaction.options.getUser("user_one"),
-          interaction.options.getUser("user_two"),
-          interaction.options.getUser("user_three"),
-          interaction.options.getUser("user_four"),
-        ];
 
-        const eventNumber =
-          interaction.options.getInteger("event_number") || " ";
+    if (interaction.options.getSubcommand() == "with_discord") {
+      const teamFilename = interaction.options.getString("team");
+      const userArray = [
+        interaction.options.getUser("user_one"),
+        interaction.options.getUser("user_two"),
+        interaction.options.getUser("user_three"),
+        interaction.options.getUser("user_four"),
+      ];
 
-        const canvas = createCanvas(1778, 1000);
-        const context = canvas.getContext("2d");
-        context.fillStyle = "#610111";
-        context.textAlign = "center";
-        context.textBaseline = "middle";
-
-        const background = await loadImage(`./src/teamPhotos/${teamFilename}`);
-        context.drawImage(background, 0, 0, canvas.width, canvas.height);
-
-        const maxWidthOfText = 190;
-        let i = 1;
-        for (const user of userArray) {
-          let fontSize = 40;
-          let fontFamily = "Minecraft";
-          context.font = `${fontSize}px ${fontFamily}`;
-
-          const userAvatar =
-            user.avatarURL({
-              format: `png`,
-              dynamic: false,
-              size: 256,
-            }) ||
-            "https://cdn.discordapp.com/attachments/1112755577685282846/1113600641760247899/incaseofermergency.png";
-          const userLoadedAvatar = await loadImage(userAvatar);
-          context.drawImage(userLoadedAvatar, 377 * i - 220, 310, 333, 333);
-
-          const member = await interaction.guild.members.fetch(user.id);
-          let nickname =
-            member.displayName.charAt(0).toUpperCase() +
-            member.displayName.slice(1);
-          let textWidth = context.measureText(nickname).width;
-
-          if (textWidth > maxWidthOfText) {
-            const scale = maxWidthOfText / textWidth;
-            const newFontSize = Math.floor(fontSize * scale);
-            context.font = `${newFontSize}px ${fontFamily}`;
-            textWidth = context.measureText(nickname).width;
-          }
-
-          context.fillText(nickname, 377 * i - 54, 714);
-          if (i == 1) {
-            context.font = `34px MinecrafterFont`;
-            context.fillText(eventNumber.toString(), 108, 114);
-            context.fillText(eventNumber.toString(), 1669, 894);
-          }
-          i++;
-        }
-
-        const emblem = interaction.options.getAttachment("emblem");
-        if (emblem) {
-          const targetWidth = 465;
-          const targetHeight = 213;
-          const imageFromCommand = await loadImage(emblem.proxyURL);
-          const imageAspectRatio =
-            imageFromCommand.width / imageFromCommand.height;
-          let drawWidth = targetWidth;
-          let drawHeight = targetWidth / imageAspectRatio;
-
-          if (drawHeight > targetHeight) {
-            drawHeight = targetHeight;
-            drawWidth = targetHeight * imageAspectRatio;
-          }
-
-          const drawX = 660 + (targetWidth - drawWidth) / 2;
-          const drawY = 787 + (targetHeight - drawHeight) / 2;
-          context.drawImage(
-            imageFromCommand,
-            drawX,
-            drawY,
-            drawWidth,
-            drawHeight
-          );
-        }
-
-        const attachment = new AttachmentBuilder(await canvas.encode("png"), {
-          name: teamFilename,
+      const imageArray = userArray.map((user) => {
+        const avatarURL = user.displayAvatarURL({
+          format: "png",
+          dynamic: false,
+          size: 256,
         });
-
-        await interaction.editReply({ files: [attachment] });
-      } else if (interaction.options.getSubcommand() == "with_minecraft") {
-        const teamFilename = interaction.options.getString("team");
-        const userArray = [
-          interaction.options.getString("player_one"),
-          interaction.options.getString("player_two"),
-          interaction.options.getString("player_three"),
-          interaction.options.getString("player_four"),
-        ];
-        const eventNumber =
-          interaction.options.getInteger("event_number") || " ";
-
-        const canvas = createCanvas(1778, 1000);
-        const context = canvas.getContext("2d");
-        context.fillStyle = "#610111";
-        context.textAlign = "center";
-        context.textBaseline = "middle";
-
-        const background = await loadImage(`./src/teamPhotos/${teamFilename}`);
-        context.drawImage(background, 0, 0, canvas.width, canvas.height);
-
-        const maxWidthOfText = 190;
-        let i = 1;
-        for (const user of userArray) {
-          let fontSize = 40;
-          let fontFamily = "Minecraft";
-          context.font = `${fontSize}px ${fontFamily}`;
-
-          const userLoadedAvatar = await loadImage(
-            `https://mc-heads.net/avatar/${user}`
-          );
-          context.drawImage(userLoadedAvatar, 377 * i - 220, 310, 333, 333);
-
-          let textWidth = context.measureText(user).width;
-          if (textWidth > maxWidthOfText) {
-            const scale = maxWidthOfText / textWidth;
-            const newFontSize = Math.floor(fontSize * scale);
-            context.font = `${newFontSize}px ${fontFamily}`;
-            textWidth = context.measureText(user).width;
-          }
-          context.fillText(user, 377 * i - 54, 714);
-          if (i == 1) {
-            context.font = `34px MinecrafterFont`;
-            context.fillText(eventNumber.toString(), 113, 114);
-            context.fillText(eventNumber.toString(), 1672, 894);
-          }
-          i++;
-        }
-
-        const emblem = interaction.options.getAttachment("emblem");
-        if (emblem) {
-          const targetWidth = 465;
-          const targetHeight = 213;
-          const imageFromCommand = await loadImage(emblem.proxyURL);
-          const imageAspectRatio =
-            imageFromCommand.width / imageFromCommand.height;
-          let drawWidth = targetWidth;
-          let drawHeight = targetWidth / imageAspectRatio;
-          if (drawHeight > targetHeight) {
-            drawHeight = targetHeight;
-            drawWidth = targetHeight * imageAspectRatio;
-          }
-          const drawX = 660 + (targetWidth - drawWidth) / 2;
-          const drawY = 787 + (targetHeight - drawHeight) / 2;
-          context.drawImage(
-            imageFromCommand,
-            drawX,
-            drawY,
-            drawWidth,
-            drawHeight
-          );
-        }
-
-        const attachment = new AttachmentBuilder(await canvas.encode("png"), {
-          name: teamFilename,
-        });
-        await interaction.editReply({ files: [attachment] });
-      } else if (interaction.options.getSubcommand() == "with_custom") {
-        const teamImage = interaction.options.getAttachment("team_image");
-        const userArray = [
-          interaction.options.getString("name_one"),
-          interaction.options.getString("name_two"),
-          interaction.options.getString("name_three"),
-          interaction.options.getString("name_four"),
-        ];
-        const imageArray = [
-          interaction.options.getAttachment("image_one"),
-          interaction.options.getAttachment("image_two"),
-          interaction.options.getAttachment("image_three"),
-          interaction.options.getAttachment("image_four"),
-        ];
-
-        const eventNumber =
-          interaction.options.getInteger("event_number") || " ";
-
-        const canvas = createCanvas(1778, 1000);
-        const context = canvas.getContext("2d");
-        context.fillStyle = "#610111";
-        context.textAlign = "center";
-        context.textBaseline = "middle";
-
-        const background = await loadImage(teamImage.proxyURL);
-
-        context.drawImage(background, 0, 0, canvas.width, canvas.height);
-        const maxWidthOfText = 190;
-
-        let i = 1;
-        for (const user of userArray) {
-          let fontSize = 40;
-          let fontFamily = "Minecraft";
-
-          context.font = `${fontSize}px ${fontFamily}`;
-
-          let userImage = imageArray[i - 1].proxyURL;
-          const userLoadedAvatar = await loadImage(userImage);
-
-          context.drawImage(userLoadedAvatar, 377 * i - 220, 310, 333, 333);
-
-          let textWidth = context.measureText(user).width;
-          if (textWidth > maxWidthOfText) {
-            const scale = maxWidthOfText / textWidth;
-            const newFontSize = Math.floor(fontSize * scale);
-
-            context.font = `${newFontSize}px ${fontFamily}`;
-            textWidth = context.measureText(user).width;
-          }
-          context.fillText(user, 377 * i - 54, 714);
-          if (i == 1) {
-            context.font = `34px MinecrafterFont`;
-            context.fillText(eventNumber.toString(), 113, 114);
-            context.fillText(eventNumber.toString(), 1672, 894);
-          }
-          i++;
-        }
-        const recievedEmblem = interaction.options.getAttachment("emblem");
-
-        if (recievedEmblem != null) {
-          const targetWidth = 465;
-          const targetHeight = 213;
-
-          const imageFromCommand = await loadImage(recievedEmblem.proxyURL);
-
-          const imageAspectRatio =
-            imageFromCommand.width / imageFromCommand.height;
-          let drawWidth = targetWidth;
-          let drawHeight = targetWidth / imageAspectRatio;
-
-          if (drawHeight > targetHeight) {
-            drawHeight = targetHeight;
-            drawWidth = targetHeight * imageAspectRatio;
-          }
-          const drawX = 660 + (targetWidth - drawWidth) / 2;
-          const drawY = 787 + (targetHeight - drawHeight) / 2;
-
-          context.drawImage(
-            imageFromCommand,
-            drawX,
-            drawY,
-            drawWidth,
-            drawHeight
-          );
-        }
-
-        const attachment = new AttachmentBuilder(await canvas.encode("png"), {
-          name: `teamImagefor${interaction.user.username}.png`,
-        });
-
-        await interaction.editReply({ files: [attachment] });
-      }
-    } catch (error) {
-      await interaction.editReply({
-        content: `Your command failed to execute. Please ensure all fields were entered correctly. Error: ${error}`,
+        return avatarURL; // Take a shot if this errors
       });
+
+      if (override) {
+        const nameOverrideModal = createModal(userArray);
+        await interaction.showModal(nameOverrideModal);
+
+        interaction.client.on("interactionCreate", async (modalInteraction) => {
+          if (
+            !modalInteraction.isModalSubmit() ||
+            modalInteraction.customId !== "nameOverrideModal" ||
+            modalInteraction.user.id !== interaction.user.id
+          )
+            return;
+
+          const modalUserArray = [
+            modalInteraction.fields.getTextInputValue("player1Input"),
+            modalInteraction.fields.getTextInputValue("player2Input"),
+            modalInteraction.fields.getTextInputValue("player3Input"),
+            modalInteraction.fields.getTextInputValue("player4Input"),
+          ];
+
+          const eventNumber =
+            interaction.options.getInteger("event_number") || " ";
+
+          createCard(
+            modalInteraction,
+            modalUserArray,
+            imageArray,
+            `./src/teamPhotos/${teamFilename}`,
+            teamFilename,
+            eventNumber,
+            attachment
+          );
+        });
+      } else {
+        const nameArray = userArray.map((user) => {
+          return user.username;
+        });
+
+        const eventNumber =
+          interaction.options.getInteger("event_number") || " ";
+
+        createCard(
+          interaction,
+          nameArray,
+          imageArray,
+          `./src/teamPhotos/${teamFilename}`,
+          teamFilename,
+          eventNumber,
+          attachment
+        );
+      }
+    } else if (interaction.options.getSubcommand() == "with_minecraft") {
+      const teamFilename = interaction.options.getString("team");
+      const userArray = [
+        interaction.options.getString("player_one"),
+        interaction.options.getString("player_two"),
+        interaction.options.getString("player_three"),
+        interaction.options.getString("player_four"),
+      ];
+
+      //Fetch the uuids and the correctly formmated usernames of the players using the mojang api and put them in 2 arrays
+      const userArrayResponse = await Promise.all(
+        userArray.map(async (user) => {
+          const response = await fetch(
+            `https://api.mojang.com/users/profiles/minecraft/${user}`
+          );
+          const data = await response.json();
+          return { id: data.id, name: data.name };
+        })
+      );
+
+      const uuidArray = userArrayResponse.map((user) => user.id);
+      const nameArray = userArrayResponse.map((user) => user.name);
+
+      const headArray = uuidArray.map((user) => {
+        return `https://mc-heads.net/avatar/${user}`;
+      });
+
+      const eventNumber = interaction.options.getInteger("event_number") || " ";
+
+      createCard(
+        interaction,
+        nameArray,
+        headArray,
+        `./src/teamPhotos/${teamFilename}`,
+        teamFilename,
+        eventNumber,
+        attachment
+      );
+    } else if (interaction.options.getSubcommand() == "with_custom") {
+      const teamImage = interaction.options.getAttachment("team_image");
+      const userArray = [
+        interaction.options.getString("name_one"),
+        interaction.options.getString("name_two"),
+        interaction.options.getString("name_three"),
+        interaction.options.getString("name_four"),
+      ];
+      const imageArray = [
+        interaction.options.getAttachment("image_one").proxyURL,
+        interaction.options.getAttachment("image_two").proxyURL,
+        interaction.options.getAttachment("image_three").proxyURL,
+        interaction.options.getAttachment("image_four").proxyURL,
+      ];
+
+      const eventNumber = interaction.options.getInteger("event_number") || " ";
+
+      await createCard(
+        interaction,
+        userArray,
+        imageArray,
+        teamImage.proxyURL,
+        `TeamImageFor${interaction.user.username}.png`,
+        eventNumber,
+        attachment
+      );
     }
   },
 };
+
+/**
+ * Creates a team announcement image
+ * @param {Discord.Interaction} interaction The interaction that triggered the command
+ * @param {string[]} nameArray The array of names to be displayed on the image
+ * @param {string[]} imageArray The array of images to be displayed on the image
+ * @param {string} background The background image for the team announcement
+ * @param {string} teamFilename The filename for the team announcement image
+ * @param {string} eventNumber The event number to be displayed on the image
+ * @param {Discord.Attachment} recievedEmblem The emblem to be displayed on the image
+ * */
+async function createCard(
+  interaction,
+  nameArray,
+  imageArray,
+  background,
+  teamFilename,
+  eventNumber = "",
+  recievedEmblem = null
+) {
+  console.log(nameArray);
+
+  const canvas = createCanvas(1778, 1000);
+  const context = canvas.getContext("2d");
+
+  context.fillStyle = "#610111";
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+
+  const loadedBackground = await loadImage(background);
+  context.drawImage(loadedBackground, 0, 0, canvas.width, canvas.height);
+
+  const maxWidthOfText = 190;
+
+  let i = 1;
+  for (const name of nameArray) {
+    console.log(name);
+    let fontSize = 40;
+    let fontFamily = "Minecraft";
+    context.font = `${fontSize}px ${fontFamily}`;
+
+    let userImage = imageArray[i - 1];
+    const loadedImage = await loadImage(userImage);
+    context.drawImage(loadedImage, 377 * i - 220, 310, 333, 333);
+
+    let textWidth = context.measureText(name).width;
+    if (textWidth > maxWidthOfText) {
+      const scale = maxWidthOfText / textWidth;
+      const newFontSize = Math.floor(fontSize * scale);
+      context.font = `${newFontSize}px ${fontFamily}`;
+      textWidth = context.measureText(name).width;
+    }
+    context.fillText(name, 377 * i - 54, 714);
+    if (i == 1) {
+      context.font = `34px MinecrafterFont`;
+      context.fillText(eventNumber.toString(), 113, 114);
+      context.fillText(eventNumber.toString(), 1672, 894);
+    }
+    i++;
+  }
+
+  if (recievedEmblem != null) {
+    const targetWidth = 465;
+    const targetHeight = 213;
+
+    const imageFromCommand = await loadImage(recievedEmblem.proxyURL);
+
+    const imageAspectRatio = imageFromCommand.width / imageFromCommand.height;
+    let drawWidth = targetWidth;
+    let drawHeight = targetWidth / imageAspectRatio;
+
+    if (drawHeight > targetHeight) {
+      drawHeight = targetHeight;
+      drawWidth = targetHeight * imageAspectRatio;
+    }
+    const drawX = 660 + (targetWidth - drawWidth) / 2;
+    const drawY = 787 + (targetHeight - drawHeight) / 2;
+
+    context.drawImage(imageFromCommand, drawX, drawY, drawWidth, drawHeight);
+  }
+
+  const attachment = new AttachmentBuilder(await canvas.encode("png"), {
+    name: teamFilename,
+  });
+
+  if (interaction.isCommand()) {
+    return await interaction.editReply({ files: [attachment] });
+  } else {
+    return await interaction.reply({ files: [attachment] });
+  }
+}
+
+function createModal(userArray) {
+  const nameOverrideModal = new ModalBuilder()
+    .setCustomId("nameOverrideModal")
+    .setTitle("Name Override Modal");
+
+  const inputFields = [];
+
+  for (let i = 0; i < 4; i++) {
+    const inputField = new TextInputBuilder()
+      .setCustomId(`player${i + 1}Input`)
+      .setValue(userArray[i].username)
+      .setLabel(`Player ${i + 1}'s Name`)
+      .setStyle(TextInputStyle.Short)
+      .setRequired(true)
+      .setMinLength(1)
+      .setMaxLength(20);
+
+    inputFields.push(inputField);
+  }
+
+  const actionRows = inputFields.map((inputField) =>
+    new ActionRowBuilder().addComponents(inputField)
+  );
+  nameOverrideModal.addComponents(...actionRows);
+  return nameOverrideModal;
+}
