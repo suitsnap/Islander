@@ -16,7 +16,7 @@
 
 ### /generate_team - main command of subcommands:
 
-/generate_team with_discord - Generates a team image using Discord avatars. Options: [team - string {C + R}, user_one - user {R}, user_two - user {R}, user_three - user {R}, user_four - user {R}, event_number - integer, emblem - attachment]
+/generate_team with_discord - Generates a team image using Discord avatars. Options: [team - string {C + R}, user_one - user {R}, user_two - user {R}, user_three - user {R}, user_four - user {R}, event_number - integer, emblem - attachment, name_override - boolean]
 
 /generate_team with_minecraft - Generates a team image using Minecraft skin faces. Options: [team - string {C + R}, player_one - string {R}, player_two - string {R}, player_three - string {R}, player_four - string {R}, event_number - integer, emblem - attachment]
 
