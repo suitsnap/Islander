@@ -179,6 +179,13 @@ module.exports = {
   },
 };
 
+/**
+ * Converts a user's avatar into a downloadable image.
+ * @param {Discord.CommandInteraction} interaction
+ * @param {Discord.User} user
+ * @param {string} formatOfPhoto
+ * @param {RegExp} regex
+ * */
 async function processAvatar(interaction, user, formatOfPhoto, regex) {
   if (!user.avatar) {
     return interaction.reply("User does not have an avatar.");
@@ -211,7 +218,13 @@ async function processAvatar(interaction, user, formatOfPhoto, regex) {
     interaction.reply("Failed to retrieve the user's avatar.");
   }
 }
-
+/**
+ * Converts 4 user's avatars into 4 images that can be downloaded.
+ * @param {Discord.CommandInteraction} interaction
+ * @param {Discord.User[]} userArray
+ * @param {string} formatOfPhoto
+ * @param {RegExp} regex
+ * */
 async function processAvatarGroup(
   interaction,
   userArray,
@@ -248,6 +261,12 @@ async function processAvatarGroup(
   interaction.reply({ content: edgeCaseMessage, files: attachmentList });
 }
 
+/**
+ * Converts a Minecraft player's avatar into a downloadable image.
+ * @param {Discord.CommandInteraction} interaction
+ * @param {string} player
+ * @param {RegExp} regex
+ * */
 async function processMinecraftAvatar(interaction, player, regex) {
   const avatarUrl = `https://mc-heads.net/avatar/${player}/4096`;
 
@@ -273,6 +292,12 @@ async function processMinecraftAvatar(interaction, player, regex) {
   }
 }
 
+/**
+ * Converts 4 Minecraft player's avatars into 4 images that can be downloaded.
+ * @param {Discord.CommandInteraction} interaction
+ * @param {string[]} playerArray
+ * @param {RegExp} regex
+ * */
 async function processMinecraftAvatarGroup(interaction, playerArray, regex) {
   const attachmentList = [];
 

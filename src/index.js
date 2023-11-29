@@ -18,6 +18,9 @@ var cron = require("node-cron");
 const reset = "\x1b[0m";
 const red = "\x1b[31m";
 const green = "\x1b[32m";
+const yellow = "\x1b[33m";
+const aqua = "\x1b[36m";
+const purple = "\x1b[35m";
 
 const client = new Client({
   intents: [
@@ -41,16 +44,23 @@ const statusOptions = [
   ["Parkour Warrior: Dojo", ActivityType.Playing],
   ["play.mccisland.net", ActivityType.Playing],
   ["MCC Island Speedruns", ActivityType.Watching],
-  ["Admin Streams", ActivityType.Streaming],
+  ["Admin Streams", ActivityType.Streaming, "https://twitch.tv/thenoxcrew"],
   ["the MCC Soundtrack", ActivityType.Listening],
   ["IW Tournaments", ActivityType.Competing],
 ];
 let statusIndex = 0;
 
+/**
+ * Updates the bot's status to the next status in the list every 5 seconds
+ */
 function updateStatus() {
   const newStatus = statusOptions[statusIndex];
+  const activities = [{ name: newStatus[0], type: newStatus[1] }];
+  if (newStatus[1] === ActivityType.Streaming && newStatus[2]) {
+    activities[0].url = newStatus[2];
+  }
   client.user.setPresence({
-    activities: [{ name: newStatus[0], type: newStatus[1] }],
+    activities,
     status: "online",
   });
   statusIndex = (statusIndex + 1) % statusOptions.length;
@@ -58,8 +68,6 @@ function updateStatus() {
 
 const commands = [];
 client.commands = new Collection();
-const guildCommands = [];
-client.guildCommands = new Collection();
 
 const commandsPath = path.join(__dirname, "commands");
 const commandFiles = fs
@@ -73,25 +81,6 @@ for (const file of commandFiles) {
 
   client.commands.set(commandName, command);
   commands.push(command.data.toJSON());
-  client.guildCommands.set(commandName, command);
-  guildCommands.push(command.data.toJSON());
-}
-
-const guildCommandsPath = path.join(
-  __dirname,
-  "islandWarriorsSpecificCommands"
-);
-const guildCommandFiles = fs
-  .readdirSync(guildCommandsPath)
-  .filter((file) => file.endsWith(".js"));
-for (const file of guildCommandFiles) {
-  const guildFilePath = path.join(guildCommandsPath, file);
-  const command = require(guildFilePath);
-
-  const commandName = command.data.name;
-
-  client.guildCommands.set(commandName, command);
-  guildCommands.push(command.data.toJSON());
 }
 
 const scheduledEventsPath = path.join(__dirname, "scheduledEvents");
@@ -102,6 +91,11 @@ getCommands(scheduledEventsPath, (command) => {
   });
 });
 
+/**
+ * Gets all the commands in a directory
+ * @param {string} dir The directory to get the commands from
+ * @param {Function} callback The callback function to run on each command
+ */
 function getCommands(dir, callback) {
   const files = fs.readdirSync(dir).filter((file) => file.endsWith(".js"));
 
@@ -112,23 +106,6 @@ function getCommands(dir, callback) {
 }
 
 client.on("ready", () => {
-  const rest = new REST({ version: "9" }).setToken(token);
-
-  // Get all ids of the servers
-  const guild_ids = client.guilds.cache.map((guild) => guild.id);
-
-  for (const guildId of guild_ids) {
-    rest
-      .put(Routes.applicationGuildCommands(clientID, guildId), {
-        body: commands,
-      })
-      .catch(console.error);
-  }
-  rest
-    .put(Routes.applicationGuildCommands(clientID, guildID), {
-      body: guildCommands,
-    })
-    .catch(console.error);
   updateStatus();
   setInterval(updateStatus, 5000);
   console.log(`Ready! Logged in as ${client.user.tag}`);
@@ -153,17 +130,10 @@ process.on("uncaughtExceptionMonitor", (err, origin) => {
 });
 
 client.on("error", (err) => {
-  console.log(red + "ERROR - Discord.js Error" + reset, `Error: ${err}`);
-});
-
-client.on("guildCreate", (guild) => {
-  const rest = new REST({ version: "9" }).setToken(token);
-
-  rest
-    .put(Routes.applicationGuildCommands(clientID, guild.id), {
-      body: commands,
-    })
-    .catch(console.error);
+  console.log(
+    red + "ERROR - Discord.js Error in Index" + reset,
+    `Error: ${err}`
+  );
 });
 
 client.on("interactionCreate", async (interaction) => {
@@ -178,8 +148,15 @@ client.on("interactionCreate", async (interaction) => {
     cooldowns.set(command.data.name, new Collection());
   }
 
+  //Add logging for commands. Should log the guild, command name and arguments, user and time.
   console.log(
-    `Guild named: ${interaction.guild.name}, ran command named: ${command.data.name}`
+    `${green}${interaction.guild.name}${reset} - ${yellow}${
+      interaction.user.tag
+    }${reset} - ${aqua}${
+      interaction.commandName
+    }${reset} - ${purple}${interaction.options.data
+      .map((option) => option.name + " | " + option.value)
+      .join(" - ")}${reset}`
   );
 
   const now = Date.now();
@@ -203,9 +180,12 @@ client.on("interactionCreate", async (interaction) => {
   setTimeout(() => timestamps.delete(interaction.user.id), cooldownAmount);
 
   try {
-    await command.execute(interaction);
+  await command.execute(interaction);
   } catch (error) {
-    console.log(red + "ERROR - Discord.js Error" + reset, `Error: ${error}`);
+    console.log(
+      red + "ERROR - Discord.js Error in Command" + reset,
+      `Error: ${error}`
+    );
     await interaction.reply({
       content: "There was an error executing this command",
     });
@@ -261,7 +241,6 @@ client.on("voiceStateUpdate", async (oldState, newState) => {
   ) {
     return;
   }
-  console.log("made it");
   try {
     if (newState.channel.id === joinToCreateChannelId) {
       const guild = newState.guild;
