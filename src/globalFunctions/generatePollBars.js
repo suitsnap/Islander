@@ -72,32 +72,32 @@ async function generatePollBars(pollMessage, votingOptions) {
   // Update the poll message with the new vote counts and percentages
   let pollMessageString = " ";
   if (votingOptions[0]) {
-    pollMessageString += `**Battle Box**  <:gameBB:1179531958183796747> ${getBar(
+    pollMessageString += `**Battle Box**  <:gameBB:1089592675595984986> ${getBar(
       battleBoxPercentage
     )} [ ${battleBoxPercentage}% • ${battleBoxVotes} ]\n\n`;
   }
   if (votingOptions[1]) {
-    pollMessageString += `**Dynaball**  <:gameDyB:1179532946420531270> ${getBar(
+    pollMessageString += `**Dynaball** <:gameDyB:1155449708119072808> ${getBar(
       dynaballPercentage
     )} [ ${dynaballPercentage}% • ${dynaballVotes} ]\n\n`;
   }
   if (votingOptions[2]) {
-    pollMessageString += `**Hole In Wall**  <:gameHITW:1179531960415158292> ${getBar(
+    pollMessageString += `**Hole In Wall**  <:gameHITW:1089592541663469678> ${getBar(
       holeInWallPercentage
     )} [ ${holeInWallPercentage}% • ${holeInWallVotes} ]\n\n`;
   }
   if (votingOptions[3]) {
-    pollMessageString += `**Parkour Warrior: Survivor**  <:gamePKW:1179531961686052884> ${getBar(
+    pollMessageString += `**Parkour Warrior: Survivor** <:gamePKWS:1128101611307278366> ${getBar(
       parkourWarriorPercentage
     )} [ ${parkourWarriorPercentage}% • ${parkourWarriorVotes} ]\n\n`;
   }
   if (votingOptions[4]) {
-    pollMessageString += `**Sky Battle**  <:gameSB:1179531963925798952> ${getBar(
+    pollMessageString += `**Sky Battle**  <:gameSB:1128115696832893018> ${getBar(
       skyBattlePercentage
     )} [ ${skyBattlePercentage}% • ${skyBattleVotes} ]\n\n`;
   }
   if (votingOptions[5]) {
-    pollMessageString += `**To Get To The Other Side**  <:gameTGTTOS:1179531966203314176> ${getBar(
+    pollMessageString += `**To Get To The Other Side**  <:gameTGTTOS:1089592804696653906> ${getBar(
       toGetToOtherSidePercentage
     )} [ ${toGetToOtherSidePercentage}% • ${toGetToOtherSideVotes} ]\n\n`;
   }

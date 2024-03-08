@@ -6,6 +6,6 @@ module.exports = {
     .setDescription("Starts the decision dome."),
   async execute(interaction) {
     await interaction.reply({ content: "Decision Dome is not yet implemented.", ephemeral: true });
-  
+    
   },
 };

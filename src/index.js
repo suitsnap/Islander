@@ -55,7 +55,7 @@ let statusIndex = 0;
  */
 function updateStatus() {
   const newStatus = statusOptions[statusIndex];
-  const activities = [{ name: newStatus[0], type: newStatus[1] }];
+  const activities = [{ name: newStatus[0], type: newStatus[1]}];
   if (newStatus[1] === ActivityType.Streaming && newStatus[2]) {
     activities[0].url = newStatus[2];
   }
@@ -130,10 +130,17 @@ process.on("uncaughtExceptionMonitor", (err, origin) => {
 });
 
 client.on("error", (err) => {
-  console.log(
-    red + "ERROR - Discord.js Error in Index" + reset,
-    `Error: ${err}`
-  );
+  console.log(red + "ERROR - Discord.js Error in Index" + reset, `Error: ${err}`);
+});
+
+client.on("guildCreate", (guild) => {
+  const rest = new REST({ version: "9" }).setToken(token);
+
+  rest
+    .put(Routes.applicationGuildCommands(clientID, guild.id), {
+      body: commands,
+    })
+    .catch(console.error);
 });
 
 client.on("interactionCreate", async (interaction) => {

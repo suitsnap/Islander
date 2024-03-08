@@ -4,6 +4,6 @@ This bot was created to aid tournament organisers with running their MCC Island 
 
 List of current commands: https://github.com/suitsnap/Islander/blob/master/CommandsList.md
 
-Latest release: v1.0.0
+Latest release: v2.0.0
 
 Created by SuitSnap

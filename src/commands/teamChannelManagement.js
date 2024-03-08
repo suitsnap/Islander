@@ -75,7 +75,9 @@ module.exports = {
     .addSubcommand((subcommand) =>
       subcommand
         .setName("role_remove")
-        .setDescription("Revoke the team roles registered in the server from members.")
+        .setDescription(
+          "Revoke the team roles registered in the server from members."
+        )
     ),
   async execute(interaction) {
     const subcommand = interaction.options.getSubcommand();
@@ -104,6 +106,7 @@ module.exports = {
       case "purge":
         await purgeChannels(interaction);
         break;
+
       case "role_remove":
         await removeTeamRoles(interaction);
         break;
@@ -476,7 +479,7 @@ async function removeTeamRoles(interaction) {
     members.forEach(async (member) => {
       await member.roles.remove(role);
     });
-    await new Promise(resolve => setTimeout(resolve, 2500));
+    await new Promise((resolve) => setTimeout(resolve, 2500));
   });
 
   await interaction.reply("Removed all team roles from members that had them.");

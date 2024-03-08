@@ -5,8 +5,6 @@ const {
   PermissionFlagsBits,
   StringSelectMenuBuilder,
   StringSelectMenuOptionBuilder,
-  ButtonBuilder,
-  ButtonStyle,
   ActionRowBuilder,
 } = require("discord.js");
 const pollSchema = require("../schemas/pollSchema");
@@ -45,8 +43,12 @@ module.exports = {
             value: "normal",
           },
           {
-            name: "No ending",
-            value: "noEnding",
+            name: "Totals",
+            value: "totals",
+          },
+          {
+            name: "Nothing",
+            value: "nothing",
           },
           {
             name: "Weighted (not functional currently)",
@@ -151,7 +153,6 @@ module.exports = {
         selectedOptions.includes("skyBattle"),
         selectedOptions.includes("toGetToTheOtherSide"),
       ];
-      
 
       await interactionCollector.reply({
         content: `Sending vote for ${selectedGames
@@ -166,7 +167,6 @@ module.exports = {
       const pollEndTimeString = `<t:${Math.floor(
         pollEndTime.getTime() / 1000
       )}:R>`;
-      
 
       let pollEmbed = new EmbedBuilder()
         .setColor(guildIconColour)
@@ -184,23 +184,24 @@ module.exports = {
       //Create list of all the relevant reaction emojis for this vote
       let reactionEmojis = [];
       if (votingOptions[0]) {
-        reactionEmojis.push("<:gameBB:1179531958183796747>");
+        reactionEmojis.push("<:gameBB:1089592675595984986>");
       }
       if (votingOptions[1]) {
-        reactionEmojis.push("<:gameDyB:1179532946420531270>");
+        reactionEmojis.push("<:gameDyB:1155449708119072808>");
       }
       if (votingOptions[2]) {
-        reactionEmojis.push("<:gameHITW:1179531960415158292>");
+        reactionEmojis.push("<:gameHITW:1089592541663469678>");
       }
       if (votingOptions[3]) {
-        reactionEmojis.push("<:gamePKW:1179531961686052884>");
+        reactionEmojis.push("<:gamePKWS:1128101611307278366>");
       }
       if (votingOptions[4]) {
-        reactionEmojis.push("<:gameSB:1179531963925798952>");
+        reactionEmojis.push("<:gameSB:1128115696832893018>");
       }
       if (votingOptions[5]) {
-        reactionEmojis.push("<:gameTGTTOS:1179531966203314176>");
+        reactionEmojis.push("<:gameTGTTOS:1089592804696653906>");
       }
+
       //Send the initial poll message
       let pollMessage = await interactionCollector.channel.send({
         content: `${roleID != null ? "<@&" + roleID.value + ">" : ""}`,

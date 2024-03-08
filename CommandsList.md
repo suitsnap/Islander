@@ -12,7 +12,7 @@
 
 /ping - Details about the bot's ping through both the client and the websocket. Options: [websocket - boolean]
 
-/begin_vote - Creates a vote for the next game in a tournament. Options: [title - string {R}, duration - integer {R}, sb_votable - boolean {R}, bb_votable - boolean {R}, hitw_votable - boolean {R}, tgttos_votable - boolean {R}, role - role, weighted - boolean]
+/begin_vote - Creates a vote for the next game in a tournament. Options: [title - string {R}, duration - integer {R}, ending - string {R}, role - role]
 
 ### /generate_team - main command of subcommands:
 

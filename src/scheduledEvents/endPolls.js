@@ -50,20 +50,28 @@ module.exports = {
       // Count the number of reactions for each vote option
       reactions.forEach((reaction) => {
         const reactionCode = reaction.emoji.name;
-        if (reactionCode === "gameBB") {
-          battleBoxVotes = reaction.count - 1;
-        } else if (reactionCode === "gameDyB") {
-          dynaballVotes = reaction.count - 1;
-        } else if (reactionCode === "gameHITW") {
-          holeInWallVotes = reaction.count - 1;
-        } else if (reactionCode === "gamePKWS") {
-          parkourWarriorVotes = reaction.count - 1;
-        } else if (reactionCode === "gameSB") {
-          skyBattleVotes = reaction.count - 1;
-        } else if (reactionCode === "gameTGTTOS") {
-          toGetToOtherSideVotes = reaction.count - 1;
+        const voteCount = reaction.count - 1;
+        switch (reactionCode) {
+          case "gameBB":
+            battleBoxVotes = voteCount;
+            break;
+          case "gameDyB":
+            dynaballVotes = voteCount;
+            break;
+          case "gameHITW":
+            holeInWallVotes = voteCount;
+            break;
+          case "gamePKWS":
+            parkourWarriorVotes = voteCount;
+            break;
+          case "gameSB":
+            skyBattleVotes = voteCount;
+            break;
+          case "gameTGTTOS":
+            toGetToOtherSideVotes = voteCount;
+            break;
         }
-        totalReactions += reaction.count - 1;
+        totalReactions += voteCount;
       });
 
       let winnerEmbed = new EmbedBuilder()
@@ -105,7 +113,6 @@ module.exports = {
         }
       });
 
-
       let gamesCopy = JSON.parse(JSON.stringify(games));
 
       games.sort((a, b) => b.votes - a.votes);
@@ -124,7 +131,7 @@ module.exports = {
           );
           await pollMessageChannel.send({ embeds: [winnerEmbed] });
           break;
-        case "noEnding":
+        case "totals":
           gamesCopy.forEach((game) => {
             switch (game.name) {
               case "Battle Box":
@@ -166,6 +173,8 @@ module.exports = {
           description += "\nTotal votes cast: " + totalReactions;
           endEmbed.setDescription(description);
           await pollMessageChannel.send({ embeds: [endEmbed] });
+          break;
+        case "nothing":
           break;
         case "weighted":
           weightedWheel(
