@@ -77,7 +77,7 @@ module.exports = {
       let winnerEmbed = new EmbedBuilder()
         .setColor(guildIconColour)
         .setTitle(
-          `<:mcc_crown:1112828436839407756>** Winner of the vote '${poll.title}' is:**`
+          `<:crown:1215739016155234424>** Winner of the vote '${poll.title}' is:**`
         );
       let winner;
 
@@ -127,7 +127,7 @@ module.exports = {
       switch (ending) {
         case "normal":
           winnerEmbed.setDescription(
-            `# **  ${winner}  **\n<:star:1094418485951615027>** Total votes cast:**  ${totalReactions}`
+            `# **  ${winner}  **\n<:star:1215739029132415046>** Total votes cast:**  ${totalReactions}`
           );
           await pollMessageChannel.send({ embeds: [winnerEmbed] });
           break;

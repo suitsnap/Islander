@@ -5,8 +5,12 @@ const {
   Events,
   ActivityType,
   ChannelType,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
 } = require("discord.js");
 const { ticketButton } = require("./events/ticketButton");
+const { currencyButton } = require("./events/currencyButton");
 const { token, clientID, guildID, databaseToken } = require("./config.json");
 const { connect } = require("mongoose");
 const fs = require("fs");
@@ -55,7 +59,7 @@ let statusIndex = 0;
  */
 function updateStatus() {
   const newStatus = statusOptions[statusIndex];
-  const activities = [{ name: newStatus[0], type: newStatus[1]}];
+  const activities = [{ name: newStatus[0], type: newStatus[1] }];
   if (newStatus[1] === ActivityType.Streaming && newStatus[2]) {
     activities[0].url = newStatus[2];
   }
@@ -111,27 +115,30 @@ client.on("ready", () => {
   console.log(`Ready! Logged in as ${client.user.tag}`);
 });
 
-process.on("unhandledRejection", async (reason, promise) => {
-  console.log(
-    red + "ERROR - Unhandled Rejection" + reset,
-    `Reason: ${reason}\nPromise: ${promise}`
-  );
-});
+// process.on("unhandledRejection", async (reason, promise) => {
+//   console.log(
+//     red + "ERROR - Unhandled Rejection" + reset,
+//     `Reason: ${reason}\nPromise: ${promise}`
+//   );
+// });
 
-process.on("uncaughtException", (err) => {
-  console.log(red + "ERROR - Uncaught Exception" + reset, `Error: ${err}`);
-});
+// process.on("uncaughtException", (err) => {
+//   console.log(red + "ERROR - Uncaught Exception" + reset, `Error: ${err}`);
+// });
 
-process.on("uncaughtExceptionMonitor", (err, origin) => {
-  console.log(
-    red + "ERROR - Uncaught Exception Monitor" + reset,
-    `Error: ${err}\nOrigin: ${origin}`
-  );
-});
+// process.on("uncaughtExceptionMonitor", (err, origin) => {
+//   console.log(
+//     red + "ERROR - Uncaught Exception Monitor" + reset,
+//     `Error: ${err}\nOrigin: ${origin}`
+//   );
+// });
 
-client.on("error", (err) => {
-  console.log(red + "ERROR - Discord.js Error in Index" + reset, `Error: ${err}`);
-});
+// client.on("error", (err) => {
+//   console.log(
+//     red + "ERROR - Discord.js Error in Index" + reset,
+//     `Error: ${err}`
+//   );
+// });
 
 client.on("guildCreate", (guild) => {
   const rest = new REST({ version: "9" }).setToken(token);
@@ -186,20 +193,20 @@ client.on("interactionCreate", async (interaction) => {
   timestamps.set(interaction.user.id, now);
   setTimeout(() => timestamps.delete(interaction.user.id), cooldownAmount);
 
-  try {
+  // try {
   await command.execute(interaction);
-  } catch (error) {
-    console.log(
-      red + "ERROR - Discord.js Error in Command" + reset,
-      `Error: ${error}`
-    );
-    await interaction.reply({
-      content: "There was an error executing this command",
-    });
-  }
+  // } catch (error) {
+  // console.log(
+  // red + "ERROR - Discord.js Error in Command" + reset,
+  // `Error: ${error}`
+  // );
+  // await interaction.reply({
+  // content: "There was an error executing this command",
+  // });
+  // }
 });
 
-client.on("interactionCreate", (buttonInteraction) => {
+client.on("interactionCreate", async (buttonInteraction) => {
   if (buttonInteraction.isButton()) {
     if (buttonInteraction.customId === "ticket-button") {
       ticketButton(buttonInteraction);
@@ -213,6 +220,18 @@ client.on("interactionCreate", (buttonInteraction) => {
           .get("1105256862670127196")
           .toString()}! Please remember not to abuse this feature as our staff are human too!`
       );
+    }
+    if (buttonInteraction.customId === "currency") {
+      await currencyButton(buttonInteraction);
+      const disabledButton = new ButtonBuilder()
+        .setCustomId("currency")
+        .setLabel("View Currency")
+        .setStyle(ButtonStyle.Primary)
+        .setDisabled(true)
+        .setEmoji({ id: "1215997826216099910", name: "coin" });
+
+      const actionRow = new ActionRowBuilder().addComponents(disabledButton);
+      await buttonInteraction.message.edit({ components: [actionRow] });
     }
   }
 });

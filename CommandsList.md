@@ -10,6 +10,8 @@
 
 ### Root commands (without subcommands):
 
+/inspect_player - Retrieves and displays information about a specific playerr using the MCC Island API! Options: [username - string {R}]
+
 /ping - Details about the bot's ping through both the client and the websocket. Options: [websocket - boolean]
 
 /begin_vote - Creates a vote for the next game in a tournament. Options: [title - string {R}, duration - integer {R}, ending - string {R}, role - role]

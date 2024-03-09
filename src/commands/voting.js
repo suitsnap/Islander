@@ -184,22 +184,22 @@ module.exports = {
       //Create list of all the relevant reaction emojis for this vote
       let reactionEmojis = [];
       if (votingOptions[0]) {
-        reactionEmojis.push("<:gameBB:1089592675595984986>");
+        reactionEmojis.push(options[0].emoji);
       }
       if (votingOptions[1]) {
-        reactionEmojis.push("<:gameDyB:1155449708119072808>");
+        reactionEmojis.push(options[1].emoji);
       }
       if (votingOptions[2]) {
-        reactionEmojis.push("<:gameHITW:1089592541663469678>");
+        reactionEmojis.push(options[2].emoji);
       }
       if (votingOptions[3]) {
-        reactionEmojis.push("<:gamePKWS:1128101611307278366>");
+        reactionEmojis.push(options[3].emoji);
       }
       if (votingOptions[4]) {
-        reactionEmojis.push("<:gameSB:1128115696832893018>");
+        reactionEmojis.push(options[4].emoji);
       }
       if (votingOptions[5]) {
-        reactionEmojis.push("<:gameTGTTOS:1089592804696653906>");
+        reactionEmojis.push(options[5].emoji);
       }
 
       //Send the initial poll message

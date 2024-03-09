@@ -1,4 +1,5 @@
 const { getBar } = require("../globalFunctions/getBar");
+const gameSchema = require("../schemas/gameSchema");
 
 /**
  * Generates the poll bars for the poll message
@@ -7,6 +8,25 @@ const { getBar } = require("../globalFunctions/getBar");
  * @returns {string} The poll message string
  * */
 async function generatePollBars(pollMessage, votingOptions) {
+  // Get the games from the database
+  const games = await gameSchema.find();
+  let options = games.map((game) => {
+    return {
+      label: game.name,
+      value: game.value,
+      emoji: game.emoji,
+    };
+  });
+
+  //Filter out games that have have any fields undefined
+  options = options.filter(
+    (option) =>
+      option.label != undefined &&
+      option.value != undefined &&
+      option.emoji != undefined
+  );
+
+  // Get the reactions for the poll message
   const reactions = await pollMessage.reactions.cache;
   let battleBoxVotes = 0;
   let dynaballVotes = 0;
@@ -19,17 +39,17 @@ async function generatePollBars(pollMessage, votingOptions) {
   // Count the number of reactions for each vote option
   reactions.forEach((reaction) => {
     const reactionCode = reaction.emoji.name;
-    if (reactionCode === "gameBB") {
+    if (reactionCode === options[0].emoji.split(":")[1]) {
       battleBoxVotes = reaction.count - 1;
-    } else if (reactionCode === "gameDyB") {
+    } else if (reactionCode === options[1].emoji.split(":")[1] ) {
       dynaballVotes = reaction.count - 1;
-    } else if (reactionCode === "gameHITW") {
+    } else if (reactionCode === options[2].emoji.split(":")[1]) {
       holeInWallVotes = reaction.count - 1;
-    } else if (reactionCode === "gamePKWS") {
+    } else if (reactionCode === options[3].emoji.split(":")[1]) {
       parkourWarriorVotes = reaction.count - 1;
-    } else if (reactionCode === "gameSB") {
+    } else if (reactionCode === options[4].emoji.split(":")[1]) {
       skyBattleVotes = reaction.count - 1;
-    } else if (reactionCode === "gameTGTTOS") {
+    } else if (reactionCode === options[5].emoji.split(":")[1]) {
       toGetToOtherSideVotes = reaction.count - 1;
     }
     totalReactions += reaction.count - 1;
@@ -72,32 +92,36 @@ async function generatePollBars(pollMessage, votingOptions) {
   // Update the poll message with the new vote counts and percentages
   let pollMessageString = " ";
   if (votingOptions[0]) {
-    pollMessageString += `**Battle Box**  <:gameBB:1089592675595984986> ${getBar(
+    pollMessageString += `**Battle Box**  ${options[0].emoji} ${getBar(
       battleBoxPercentage
     )} [ ${battleBoxPercentage}% • ${battleBoxVotes} ]\n\n`;
   }
   if (votingOptions[1]) {
-    pollMessageString += `**Dynaball** <:gameDyB:1155449708119072808> ${getBar(
+    pollMessageString += `**Dynaball** ${options[1].emoji} ${getBar(
       dynaballPercentage
     )} [ ${dynaballPercentage}% • ${dynaballVotes} ]\n\n`;
   }
   if (votingOptions[2]) {
-    pollMessageString += `**Hole In Wall**  <:gameHITW:1089592541663469678> ${getBar(
+    pollMessageString += `**Hole In Wall**  ${options[2].emoji} ${getBar(
       holeInWallPercentage
     )} [ ${holeInWallPercentage}% • ${holeInWallVotes} ]\n\n`;
   }
   if (votingOptions[3]) {
-    pollMessageString += `**Parkour Warrior: Survivor** <:gamePKWS:1128101611307278366> ${getBar(
+    pollMessageString += `**Parkour Warrior: Survivor**  ${
+      options[3].emoji
+    } ${getBar(
       parkourWarriorPercentage
     )} [ ${parkourWarriorPercentage}% • ${parkourWarriorVotes} ]\n\n`;
   }
   if (votingOptions[4]) {
-    pollMessageString += `**Sky Battle**  <:gameSB:1128115696832893018> ${getBar(
+    pollMessageString += `**Sky Battle**  ${options[4].emoji} ${getBar(
       skyBattlePercentage
     )} [ ${skyBattlePercentage}% • ${skyBattleVotes} ]\n\n`;
   }
   if (votingOptions[5]) {
-    pollMessageString += `**To Get To The Other Side**  <:gameTGTTOS:1089592804696653906> ${getBar(
+    pollMessageString += `**To Get To The Other Side**  ${
+      options[5].emoji
+    } ${getBar(
       toGetToOtherSidePercentage
     )} [ ${toGetToOtherSidePercentage}% • ${toGetToOtherSideVotes} ]\n\n`;
   }
