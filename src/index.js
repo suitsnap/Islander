@@ -115,39 +115,29 @@ client.on("ready", () => {
   console.log(`Ready! Logged in as ${client.user.tag}`);
 });
 
-// process.on("unhandledRejection", async (reason, promise) => {
-//   console.log(
-//     red + "ERROR - Unhandled Rejection" + reset,
-//     `Reason: ${reason}\nPromise: ${promise}`
-//   );
-// });
+process.on("unhandledRejection", async (reason, promise) => {
+  console.log(
+    red + "ERROR - Unhandled Rejection" + reset,
+    `Reason: ${reason}\nPromise: ${promise}`
+  );
+});
 
-// process.on("uncaughtException", (err) => {
-//   console.log(red + "ERROR - Uncaught Exception" + reset, `Error: ${err}`);
-// });
+process.on("uncaughtException", (err) => {
+  console.log(red + "ERROR - Uncaught Exception" + reset, `Error: ${err}`);
+});
 
-// process.on("uncaughtExceptionMonitor", (err, origin) => {
-//   console.log(
-//     red + "ERROR - Uncaught Exception Monitor" + reset,
-//     `Error: ${err}\nOrigin: ${origin}`
-//   );
-// });
+process.on("uncaughtExceptionMonitor", (err, origin) => {
+  console.log(
+    red + "ERROR - Uncaught Exception Monitor" + reset,
+    `Error: ${err}\nOrigin: ${origin}`
+  );
+});
 
-// client.on("error", (err) => {
-//   console.log(
-//     red + "ERROR - Discord.js Error in Index" + reset,
-//     `Error: ${err}`
-//   );
-// });
-
-client.on("guildCreate", (guild) => {
-  const rest = new REST({ version: "9" }).setToken(token);
-
-  rest
-    .put(Routes.applicationGuildCommands(clientID, guild.id), {
-      body: commands,
-    })
-    .catch(console.error);
+client.on("error", (err) => {
+  console.log(
+    red + "ERROR - Discord.js Error in Index" + reset,
+    `Error: ${err}`
+  );
 });
 
 client.on("interactionCreate", async (interaction) => {
@@ -193,17 +183,17 @@ client.on("interactionCreate", async (interaction) => {
   timestamps.set(interaction.user.id, now);
   setTimeout(() => timestamps.delete(interaction.user.id), cooldownAmount);
 
-  // try {
-  await command.execute(interaction);
-  // } catch (error) {
-  // console.log(
-  // red + "ERROR - Discord.js Error in Command" + reset,
-  // `Error: ${error}`
-  // );
-  // await interaction.reply({
-  // content: "There was an error executing this command",
-  // });
-  // }
+  try {
+    await command.execute(interaction);
+  } catch (error) {
+    console.log(
+      red + "ERROR - Discord.js Error in Command" + reset,
+      `Error: ${error}`
+    );
+    await interaction.reply({
+      content: "There was an error executing this command",
+    });
+  }
 });
 
 client.on("interactionCreate", async (buttonInteraction) => {
