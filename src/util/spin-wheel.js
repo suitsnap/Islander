@@ -13,7 +13,7 @@ const { createCanvasWheel } = require("./canvas-wheel");
  * @param {number} canvasWidth The width of the canvas
  * @param {number} canvasHeight The height of the canvas
  * @param {number} lastFrameDurationMs The duration of the last frame
- * @returns {Object} The spin wheel GIF
+ * @returns {{getGif: (function(): Buffer.from | Buffer), getLastFrame: (function(): *), selectedOption: *, selectedOptionColor: *}} The spin wheel GIF
  * @returns {Buffer} Object.getGif() The spin wheel GIF
  * @returns {Buffer} Object.getLastFrame() The last frame of the spin wheel GIF
  * @returns {string} Object.selectedOption The selected option

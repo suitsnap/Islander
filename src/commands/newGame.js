@@ -1,6 +1,16 @@
 const {SlashCommandBuilder} = require("@discordjs/builders");
 const gameSchema = require("../schemas/gameSchema");
 
+
+/**
+ * Creates a command to handle team making. Just makes my job a bit easier innit.
+ * @type {{data: Omit<SlashCommandBuilder, "addSubcommand" | "addSubcommandGroup">, execute(*): Promise<*|undefined>}}
+ */
+
+/**
+ * @typedef {Object} game
+ * @property {function} save
+ */
 module.exports = {
     data: new SlashCommandBuilder()
         .setName("add_game")
@@ -25,7 +35,7 @@ module.exports = {
             .setName("value")
             .setDescription("The value of the game.")
             .setRequired(true)), async execute(interaction) {
-        if (interaction.user.id != "369238700489441280") {
+        if (interaction.user.id !== "369238700489441280") {
             return await interaction.reply({
                 content: "Unfortunately, you are not SuitSnap and so cannot use this command.", ephemeral: true,
             });

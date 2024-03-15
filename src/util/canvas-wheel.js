@@ -18,22 +18,22 @@ function createCanvasWheel(canvas, ctx, options, endAngleDegrees, totalSteps) {
     options = options.filter(function (option) {
         return option.votes > 0;
     });
-    var colors = options.map(function (option) {
+    const colors = options.map(function (option) {
         return option.colour;
     });
-    var portionSizes = options.map(function (option) {
+    const portionSizes = options.map(function (option) {
         return option.weight;
     });
     options = options.map(function (option) {
         return option.name;
     });
     console.log(options);
-    var cw = canvas.width;
-    var ch = canvas.height;
-    var cx = cw / 2;
-    var cy = ch / 2;
-    var radius = Math.min(cw, ch) / 2 - 5;
-    var endAngle = (endAngleDegrees * Math.PI) / 180;
+    const cw = canvas.width;
+    const ch = canvas.height;
+    const cx = cw / 2;
+    const cy = ch / 2;
+    const radius = Math.min(cw, ch) / 2 - 5;
+    const endAngle = (endAngleDegrees * Math.PI) / 180;
     console.log(portionSizes);
 
     /**
@@ -68,10 +68,10 @@ function createCanvasWheel(canvas, ctx, options, endAngleDegrees, totalSteps) {
      * @param {string} backgroundColor The background colour
      * */
     function drawOption(angle, index, option, backgroundColor) {
-        var optionAngle = angle + portionSizes.slice(0, index).reduce(function (a, b) {
+        const optionAngle = angle + portionSizes.slice(0, index).reduce(function (a, b) {
             return a + b;
         }, 0) * Math.PI * 2;
-        var textColor = getTextColorFromBackground(backgroundColor);
+        const textColor = getTextColorFromBackground(backgroundColor);
 
         //console.log(`${optionAngle}\n${angle}\n${index}\n${option}`);
 
@@ -99,8 +99,8 @@ function createCanvasWheel(canvas, ctx, options, endAngleDegrees, totalSteps) {
             ctx.font = "14px Montserrat";
             ctx.textBaseline = "middle";
 
-            var textWidth = Math.min(ctx.measureText(option).width, radius);
-            var centeredTextX = (radius - textWidth) / 2;
+            const textWidth = Math.min(ctx.measureText(option).width, radius);
+            const centeredTextX = (radius - textWidth) / 2;
 
             ctx.fillText(option, centeredTextX, 0, radius);
             ctx.restore();
@@ -115,15 +115,15 @@ function createCanvasWheel(canvas, ctx, options, endAngleDegrees, totalSteps) {
      * @param {number} angle The angle
      * */
     function drawOptions(angle) {
-        var first = options[0], rest = options.slice(1).reverse();
-        var orderedOptions = [first].concat(rest);
+        const first = options[0], rest = options.slice(1).reverse();
+        const orderedOptions = [first].concat(rest);
 
-        var firstColor = colors[0], restColors = colors.slice(1).reverse();
-        var orderedColors = [firstColor].concat(restColors);
+        const firstColor = colors[0], restColors = colors.slice(1).reverse();
+        const orderedColors = [firstColor].concat(restColors);
 
-        for (var i = 0; i < orderedOptions.length; i++) {
-            var option = orderedOptions[i];
-            var color = orderedColors[i];
+        for (let i = 0; i < orderedOptions.length; i++) {
+            const option = orderedOptions[i];
+            const color = orderedColors[i];
             drawOption(angle, i, option, color);
         }
     }
@@ -142,8 +142,8 @@ function createCanvasWheel(canvas, ctx, options, endAngleDegrees, totalSteps) {
      * Draw the arrow
      * */
     function drawArrow() {
-        var initialX = cw - 5;
-        var initialY = cy - 10;
+        const initialX = cw - 5;
+        const initialY = cy - 10;
         ctx.beginPath();
         ctx.moveTo(initialX, initialY);
         ctx.lineTo(initialX, initialY + 20);
@@ -161,7 +161,7 @@ function createCanvasWheel(canvas, ctx, options, endAngleDegrees, totalSteps) {
      * @param {number} step The step
      * */
     function draw(step) {
-        var angle = easing(step);
+        const angle = easing(step);
 
         ctx.translate(cx, cy);
         ctx.rotate(angle);
@@ -184,16 +184,16 @@ function createCanvasWheel(canvas, ctx, options, endAngleDegrees, totalSteps) {
     /**
      *  Get the option by step
      * @param {number} step The step
-     * @returns {Object} The option
+     * @returns {{color: *, option: *}} The option
      * @returns {string} Object.option The option
      * @returns {string} Object.color The option colour
      * */
     function getOptionByStep(step) {
-        var angle = easing(step) % (Math.PI * 2); // Ensure the angle is less than a full circle
-        var optionIndex = portionSizes.findIndex(function (size, index) {
+        const angle = easing(step) % (Math.PI * 2); // Ensure the angle is less than a full circle
+        const optionIndex = portionSizes.findIndex(function (size, index) {
             return (angle < portionSizes.slice(0, index + 1).reduce(function (a, b) {
-                    return a + b;
-                }, 0) * Math.PI * 2);
+                return a + b;
+            }, 0) * Math.PI * 2);
         });
         return {
             option: options[optionIndex], color: colors[optionIndex],

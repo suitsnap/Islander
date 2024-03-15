@@ -1,7 +1,6 @@
 const {
     SlashCommandBuilder,
     EmbedBuilder,
-    Collection,
     PermissionFlagsBits,
     StringSelectMenuBuilder,
     StringSelectMenuOptionBuilder,
@@ -63,7 +62,7 @@ module.exports = {
         const guildIconColour = await getMostFrequentGuildIconColour(guild);
 
         const generatedPollId = await generatePollId();
-        if (generatedPollId == "Error generating poll ID.") {
+        if (generatedPollId === "Error generating poll ID.") {
             await interaction.reply(generatedPollId);
         }
         //Create the select menu for the games from the database
@@ -75,7 +74,7 @@ module.exports = {
         });
 
         //Filter out games that have any fields undefined
-        options = options.filter((option) => option.label != undefined && option.value != undefined && option.emoji != undefined);
+        options = options.filter((option) => option.label !== undefined && option.value !== undefined && option.emoji !== undefined);
 
         const gameSelect = new StringSelectMenuBuilder()
             .setCustomId(`gameSelect-${generatedPollId}`)
@@ -159,7 +158,7 @@ module.exports = {
             });
 
             //Create the initial poll bars (will be 0s)
-            const pollMessageString = generatePollBars(pollMessage, votingOptions);
+            const pollMessageString = await generatePollBars(pollMessage, votingOptions);
 
             pollEmbed.setDescription(pollMessageString);
             await pollMessage.edit({embeds: [pollEmbed]});
@@ -194,14 +193,15 @@ module.exports = {
                 });
 
                 /*Check if:
-            the reactor is not a bot,
-            if the reaction is in a DM,
-            if the message reacted to is the poll for this interaction,
-            if the poll has ended and return if any are true */
-                if (user.bot || !reaction.message.guild || pollMessage.id != reaction.message.id || !currentPoll.active) return;
+                the reactor is not a bot,
+                if the reaction is in a DM,
+                if the message reacted to is the poll for this interaction,
+                if the poll has ended and return if any are true */
+                if (user.bot || !reaction.message.guild || pollMessage.id !== reaction.message.id || !currentPoll.active) return;
 
                 //No new reactions emojis can be added
-                if (!reactionEmojis.includes(reaction._emoji.toString())) {
+                const formattedEmoji = "<:" + reaction.emoji.name + ":" + reaction.emoji.id + ">";
+                if (!reactionEmojis.includes(formattedEmoji)) {
                     reaction.users.remove(user.id).catch(console.error);
                 }
 
@@ -227,7 +227,7 @@ module.exports = {
                     }
                 }
 
-                const pollMessageString = generatePollBars(pollMessage, votingOptions);
+                const pollMessageString = await generatePollBars(pollMessage, votingOptions);
                 pollEmbed.setDescription(pollMessageString);
                 await pollMessage.edit({embeds: [pollEmbed]});
             });
@@ -240,9 +240,9 @@ module.exports = {
                     pollId: generatedPollId,
                 });
 
-                if (user.bot || !reaction.message.guild || pollMessage.id != reaction.message.id || !currentPoll.active) return;
+                if (user.bot || !reaction.message.guild || pollMessage.id !== reaction.message.id || !currentPoll.active) return;
 
-                const pollMessageString = generatePollBars(pollMessage, votingOptions);
+                const pollMessageString = await generatePollBars(pollMessage, votingOptions);
                 pollEmbed.setDescription(pollMessageString);
                 await pollMessage.edit({embeds: [pollEmbed]});
             });
@@ -251,8 +251,8 @@ module.exports = {
 };
 
 /**
- * Checks the database for polls that have ended
- * @returns {Promise<Collection<string, any>>} A collection of polls that have ended
+ * Creates a new poll ID
+ * @returns {Promise<string>} The generated poll ID
  * */
 async function generatePollId() {
     const list = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";

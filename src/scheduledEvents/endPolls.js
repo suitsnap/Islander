@@ -27,7 +27,7 @@ module.exports = {
             const guildIconColour = await getMostFrequentGuildIconColour(pollMessageChannel.guild);
             const pollEmbed = EmbedBuilder.from(pollMessage.embeds[0]);
 
-            const pollMessageString = generatePollBars(pollMessage, votingOptions);
+            const pollMessageString = await generatePollBars(pollMessage, votingOptions);
             pollEmbed.setDescription(pollMessageString);
             await pollMessage.edit({embeds: [pollEmbed]});
 
@@ -75,34 +75,7 @@ module.exports = {
             //Get game json from database and add fields for votes and weight
             let games = await gameSchema.find({});
 
-            games.forEach((game) => {
-                switch (game.name) {
-                    case "Battle Box":
-                        game.votes = battleBoxVotes;
-                        game.weight = battleBoxVotes / totalReactions;
-                        break;
-                    case "Dynaball":
-                        game.votes = dynaballVotes;
-                        game.weight = dynaballVotes / totalReactions;
-                        break;
-                    case "Hole in the Wall":
-                        game.votes = holeInWallVotes;
-                        game.weight = holeInWallVotes / totalReactions;
-                        break;
-                    case "Parkour Warrior: Survivor":
-                        game.votes = parkourWarriorVotes;
-                        game.weight = parkourWarriorVotes / totalReactions;
-                        break;
-                    case "Sky Battle":
-                        game.votes = skyBattleVotes;
-                        game.weight = skyBattleVotes / totalReactions;
-                        break;
-                    case "To Get to the Other Side":
-                        game.votes = toGetToOtherSideVotes;
-                        game.weight = toGetToOtherSideVotes / totalReactions;
-                        break;
-                }
-            });
+            games = extractVotes(games, battleBoxVotes, dynaballVotes, holeInWallVotes, parkourWarriorVotes, skyBattleVotes, toGetToOtherSideVotes, totalReactions);
 
             let gamesCopy = JSON.parse(JSON.stringify(games));
 
@@ -121,34 +94,7 @@ module.exports = {
                     await pollMessageChannel.send({embeds: [winnerEmbed]});
                     break;
                 case "totals":
-                    gamesCopy.forEach((game) => {
-                        switch (game.name) {
-                            case "Battle Box":
-                                game.votes = battleBoxVotes;
-                                game.weight = battleBoxVotes / totalReactions;
-                                break;
-                            case "Dynaball":
-                                game.votes = dynaballVotes;
-                                game.weight = dynaballVotes / totalReactions;
-                                break;
-                            case "Hole in the Wall":
-                                game.votes = holeInWallVotes;
-                                game.weight = holeInWallVotes / totalReactions;
-                                break;
-                            case "Parkour Warrior: Survivor":
-                                game.votes = parkourWarriorVotes;
-                                game.weight = parkourWarriorVotes / totalReactions;
-                                break;
-                            case "Sky Battle":
-                                game.votes = skyBattleVotes;
-                                game.weight = skyBattleVotes / totalReactions;
-                                break;
-                            case "To Get to the Other Side":
-                                game.votes = toGetToOtherSideVotes;
-                                game.weight = toGetToOtherSideVotes / totalReactions;
-                                break;
-                        }
-                    });
+                    gamesCopy = extractVotes(gamesCopy, battleBoxVotes, dynaballVotes, holeInWallVotes, parkourWarriorVotes, skyBattleVotes, toGetToOtherSideVotes, totalReactions);
                     const endEmbed = new EmbedBuilder()
                         .setColor(guildIconColour)
                         .setTitle(`Vote '${poll.title}' has ended!`);
@@ -234,4 +180,36 @@ async function weightedWheel(gamesCopy, pollMessageChannel, winnerEmbed, guildIc
         await sleep(500);
     }
     await winMessage.edit({embeds: [winnerEmbed]});
+}
+
+function extractVotes(games, battleBoxVotes, dynaballVotes, holeInWallVotes, parkourWarriorVotes, skyBattleVotes, toGetToOtherSideVotes, totalReactions) {
+    games.forEach((game) => {
+        switch (game.name) {
+            case "Battle Box":
+                game.votes = battleBoxVotes;
+                game.weight = battleBoxVotes / totalReactions;
+                break;
+            case "Dynaball":
+                game.votes = dynaballVotes;
+                game.weight = dynaballVotes / totalReactions;
+                break;
+            case "Hole in the Wall":
+                game.votes = holeInWallVotes;
+                game.weight = holeInWallVotes / totalReactions;
+                break;
+            case "Parkour Warrior: Survivor":
+                game.votes = parkourWarriorVotes;
+                game.weight = parkourWarriorVotes / totalReactions;
+                break;
+            case "Sky Battle":
+                game.votes = skyBattleVotes;
+                game.weight = skyBattleVotes / totalReactions;
+                break;
+            case "To Get to the Other Side":
+                game.votes = toGetToOtherSideVotes;
+                game.weight = toGetToOtherSideVotes / totalReactions;
+                break;
+        }
+    });
+    return games;
 }

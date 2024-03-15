@@ -90,7 +90,7 @@ async function addChannels(interaction) {
     const teamRole = interaction.options.getRole("team_role");
     const teamVoiceChannel = interaction.options.getChannel("team_voice_channel") || null;
 
-    if (teamTextChannel.type != ChannelType.GuildText || (teamVoiceChannel != null && teamVoiceChannel.type != ChannelType.GuildVoice)) {
+    if (teamTextChannel.type !== ChannelType.GuildText || (teamVoiceChannel != null && teamVoiceChannel.type !== ChannelType.GuildVoice)) {
         return await interaction.reply({
             content: `Provided channels are not of the correct type.`, ephemeral: true,
         });
@@ -99,7 +99,7 @@ async function addChannels(interaction) {
         guildId: interaction.guild.id,
     });
 
-    if (teamChannels?.teams.length == 25 ?? false) {
+    if (teamChannels?.teams.length === 25 ?? false) {
         return await interaction.reply({
             content: `You have reached the maximum number of teams.`, ephemeral: true,
         });
@@ -147,7 +147,7 @@ async function viewChannels(interaction) {
     const teamChannels = await teamChannelSchema.findOne({
         guildId: interaction.guild.id,
     });
-    if (!teamChannels || teamChannels.teams.length == 0) {
+    if (!teamChannels || teamChannels.teams.length === 0) {
         return await interaction.reply({
             content: `You don't have any team channels set up.`, ephemeral: true,
         });
@@ -184,7 +184,7 @@ async function readyCheck(interaction) {
     const teamChannels = await teamChannelSchema.findOne({
         guildId: interaction.guild.id,
     });
-    if (!teamChannels || teamChannels.teams.length == 0) {
+    if (!teamChannels || teamChannels.teams.length === 0) {
         return await interaction.reply({
             content: `You don't have any team channels set up.`, ephemeral: true,
         });
@@ -237,7 +237,7 @@ async function readyCheck(interaction) {
     interaction.client.on("interactionCreate", async (buttonInteraction) => {
         if (buttonInteraction.isButton()) {
             let respondantTeam = teamChannels.teams.find((team) => {
-                return team[0] == buttonInteraction.channelId;
+                return team[0] === buttonInteraction.channelId;
             });
             if (duplicateChecker.includes(respondantTeam[0])) {
                 return await buttonInteraction.reply({
@@ -246,21 +246,21 @@ async function readyCheck(interaction) {
             }
             duplicateChecker.push(respondantTeam[0]);
             let respondantTeamName = `${interaction.guild.roles.cache.get(respondantTeam[1]).name}`;
-            let respondantTeamStatus = buttonInteraction.customId == "ready" ? "ready" : "**not** ready";
+            let respondantTeamStatus = buttonInteraction.customId === "ready" ? "ready" : "**not** ready";
 
             responseArray.push(`${respondantTeamName} are ${respondantTeamStatus}.`);
 
-            if (buttonInteraction.customId == "ready") {
+            if (buttonInteraction.customId === "ready") {
                 await buttonInteraction.reply({
                     content: `You have marked your team as ready.`,
                 });
-            } else if (buttonInteraction.customId == "not_ready") {
+            } else if (buttonInteraction.customId === "not_ready") {
                 await buttonInteraction.reply({
                     content: `You have marked your team as not ready.`,
                 });
             }
             responseCount++;
-            if (responseCount == teamChannels.teams.length) {
+            if (responseCount === teamChannels.teams.length) {
                 //Create an embed for the response
                 const embed = new EmbedBuilder()
                     .setTitle("Ready Check")
@@ -283,7 +283,7 @@ async function removeChannels(interaction) {
     const teamChannels = await teamChannelSchema.findOne({
         guildId: interaction.guild.id,
     });
-    if (!teamChannels || teamChannels.teams.length == 0) {
+    if (!teamChannels || teamChannels.teams.length === 0) {
         return await interaction.reply({
             content: `You don't have any team channels set up.`, ephemeral: true,
         });
@@ -311,7 +311,7 @@ async function sendInfo(interaction) {
     const teamChannels = await teamChannelSchema.findOne({
         guildId: interaction.guild.id,
     });
-    if (!teamChannels || teamChannels.teams.length == 0) {
+    if (!teamChannels || teamChannels.teams.length === 0) {
         return await interaction.reply({
             content: `You don't have any team channels set up.`, ephemeral: true,
         });
@@ -353,7 +353,7 @@ async function purgeChannels(interaction) {
         guildId: interaction.guild.id,
     });
 
-    if (!teamChannels || teamChannels.teams.length == 0) {
+    if (!teamChannels || teamChannels.teams.length === 0) {
         return await interaction.editReply({
             content: `You don't have any team channels set up.`, ephemeral: true,
         });
@@ -362,16 +362,16 @@ async function purgeChannels(interaction) {
     const guild = interaction.guild;
     const guildIconColour = await getMostFrequentGuildIconColour(guild);
 
-    teamChannels.teams.forEach(async (team) => {
+    for (const team of teamChannels.teams) {
         const channel = interaction.guild.channels.cache.get(team[0]);
         await channel.bulkDelete(100, true);
-    });
+    }
 
-    teamChannels.teams.forEach(async (team) => {
-        if (team[2] == null) return;
+    for (const team of teamChannels.teams) {
+        if (team[2] == null) continue;
         const channel = interaction.guild.channels.cache.get(team[2]);
         await channel.bulkDelete(100, true);
-    });
+    }
 
     const embed = new EmbedBuilder()
         .setTitle("Team Channels")
@@ -390,7 +390,7 @@ async function removeTeamRoles(interaction) {
         guildId: interaction.guild.id,
     });
 
-    if (!teamChannels || teamChannels.teams.length == 0) {
+    if (!teamChannels || teamChannels.teams.length === 0) {
         return interaction.reply({
             content: `You don't have any team channels set up.`, ephemeral: true,
         });
@@ -399,9 +399,9 @@ async function removeTeamRoles(interaction) {
     for (const team of teamChannels.teams) {
         const role = interaction.guild.roles.cache.get(team[1]);
         const members = role.members;
-        members.forEach(async (member) => {
+        for (const member of members) {
             await member.roles.remove(role);
-        });
+        }
         await new Promise((resolve) => setTimeout(resolve, 2500));
     }
 

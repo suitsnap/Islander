@@ -1,10 +1,43 @@
-const {EmbedBuilder, ButtonBuilder, ActionRowBuilder} = require("discord.js");
+const {EmbedBuilder, ButtonInteraction} = require("discord.js");
 const {apiToken} = require("../config.json");
 const {getUUID} = require("../util/getUUID");
+const cacheSchema = require("../schemas/cacheSchema")
+const moment = require("moment/moment");
+
+/**
+ * @typedef {Object} Currency
+ * @property {number} coins
+ * @property {number} gems
+ * @property {number} materialDust
+ * @property {number} royalReputation
+ * @property {number} silver
+ */
+
+/**
+ * @typedef {Object} Player
+ * @property {Currency} currency
+ */
+
+/**
+ * @typedef {Object} Data
+ * @property {Player} player
+ */
+
+/**
+ * @typedef {Object} ResponseData
+ * @property {Data} data
+ */
 
 /**
  * Handles the currency button interaction
  * @param {ButtonInteraction} interaction
+ * @returns {Promise<void>}
+ */
+
+/**
+ * @typedef {Object} cache
+ * @property {Object} data
+ * @property {Number} expiry
  */
 async function currencyButton(interaction) {
     const message = interaction.message;
@@ -12,7 +45,19 @@ async function currencyButton(interaction) {
     const nameOfPlayer = embed.data.title.toString().split(" ")[1].split("'")[0];
     const uuid = await getUUID(nameOfPlayer, interaction);
 
-    const query = `
+    if (uuid == null) return;
+
+    let data;
+    const cache = await cacheSchema.findOne({uuid: uuid})
+    let cached = false;
+    let timestamp = null;
+    if (cache !== null && cache.data !== null) {
+        data = cache.data;
+        timestamp = cache.expiry - 60
+        cache.deleteOne();
+        cached = true
+    } else {
+        const query = `
         query {
             player(uuid: "${uuid}") {
                 currency {
@@ -26,13 +71,16 @@ async function currencyButton(interaction) {
         }
     `;
 
-    const response = await fetch("https://api.mccisland.net/graphql", {
-        method: "POST", headers: {
-            "Content-Type": "application/json", Accept: "application/json", "X-API-Key": apiToken,
-        }, body: JSON.stringify({query}),
-    });
+        const response = await fetch("https://api.mccisland.net/graphql", {
+            method: "POST", headers: {
+                "Content-Type": "application/json", Accept: "application/json", "X-API-Key": apiToken,
+            }, body: JSON.stringify({query}),
+        });
 
-    const data = await response.json();
+        data = await response.json();
+    }
+
+    await cacheSchema.create({uuid: uuid, data: data, expiry: Math.floor(Date.now() / 1000), type: "currency"})
 
     const currency = data.data.player.currency;
     const currencyEmbed = new EmbedBuilder()
@@ -54,6 +102,11 @@ async function currencyButton(interaction) {
         })
         .setColor(0x058fd0)
         .setTimestamp();
+
+    if (cached) {
+        const time = moment.unix(timestamp)
+        currencyEmbed.setFooter({text: `Cached from: ${time.fromNow()}`})
+    }
 
 
     return interaction.reply({embeds: [currencyEmbed]});

@@ -1,11 +1,11 @@
-const {getBar} = require(".//getBar");
+const {getBar} = require("./getBar");
 const gameSchema = require("../schemas/gameSchema");
 
 /**
  * Generates the poll bars for the poll message
  * @param {Message} pollMessage The poll message
- * @param {boolean[]} votingOptions The voting options
- * @returns {string} The poll message string
+ * @param {Boolean[]} votingOptions The voting options
+ * @returns {Promise<String>} The poll message string
  * */
 async function generatePollBars(pollMessage, votingOptions) {
     // Get the games from the database

@@ -5,8 +5,47 @@ const {ButtonStyle} = require("discord.js");
 const {getUUID} = require("../util/getUUID");
 const {sanitiseUsername} = require("../util/sanitiseUsername");
 const {apiToken} = require("../config.json");
-const {cacheSchema} = require("../schemas/cacheSchema");
+const cacheSchema = require("../schemas/cacheSchema");
+const moment = require("moment")
 
+
+/**
+ * Creates a command to inspect a player using the MCCI API.
+ * @type {{data: Omit<SlashCommandBuilder, "addSubcommand" | "addSubcommandGroup">, cooldown: number, execute(*): Promise<undefined|*>}}
+ */
+
+/**
+ * Nonsense to get WebStorm to stop yelling at me
+ *  @typedef {Object} player
+ *  @property {Date} lastJoin
+ *  @property {Date} firstJoin
+ *  @property {Array} ranks
+ *  @property {Object} status
+ *  @property {boolean} status.online
+ *  @property {Object} status.server
+ *  @property {string} status.server.associatedGame
+ *  @property {string} status.server.category
+ *  @property {string} status.server.id
+ *  @property {string} status.server.subType
+ *  @property {Object} party
+ *  @property {boolean} party.active
+ *  @property {Object} party.leader
+ *  @property {Array} party.members
+ *  @property {Array} friends
+ *  @property {Object} currency
+ *  @property {number} currency.coins
+ *  @property {number} currency.gems
+ *  @property {number} currency.materialDust
+ *  @property {number} currency.royalReputation
+ *  @property {number} currency.silver
+ */
+
+
+/**
+ * @typedef {Object} cache
+ * @property {Object} data
+ * @property {Number} expiry
+ */
 module.exports = {
     cooldown: 5, data: new SlashCommandBuilder()
         .setName("inspect")
@@ -18,10 +57,17 @@ module.exports = {
         const username = interaction.options.getString("username");
         const uuid = await getUUID(username, interaction);
 
-        let data = undefined;
-        if (cacheSchema.findOne({uuid: uuid})) {
-            data = cacheSchema.findOne({uuid: uuid}).data;
-            
+        if (uuid === null) return;
+
+        let data = null;
+        const cache = await cacheSchema.findOne({uuid: uuid, type: "player"});
+        let cached = false
+        let timestamp = null
+        if (cache !== null && cache.data !== null) {
+            data = cache.data;
+            timestamp = cache.expiry - 60
+            cache.deleteOne();
+            cached = true
         } else {
             const query = `
             query {
@@ -50,7 +96,6 @@ module.exports = {
                         }
                     }
                     friends {
-                        username
                         status {
                             online
                         }
@@ -84,6 +129,9 @@ module.exports = {
                 return await interaction.reply({embeds: [errorEmbed], ephemeral: true});
             }
         }
+
+        await cacheSchema.create({uuid: uuid, data: data, expiry: Math.floor(Date.now() / 1000 + 60), type: "player"});
+
         const joinedTimestamp = convertToUnixTimestamp(data.data.player.firstJoin);
         const lastOnlineTimestamp = convertToUnixTimestamp(data.data.player.lastJoin);
 
@@ -110,6 +158,11 @@ module.exports = {
                 value: friendsAmount === 0 ? "None" : `${friendsOnline}/${friendsAmount} online`,
                 inline: true,
             });
+
+        if (cached) {
+            const time = moment.unix(timestamp)
+            playerEmbed.setFooter({text: `Cached from: ${time.fromNow()}`})
+        }
 
         const currencyButton = new ButtonBuilder()
             .setCustomId("currency")

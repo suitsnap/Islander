@@ -179,7 +179,7 @@ module.exports = {
             return;
         }
 
-        if (interaction.options.getSubcommand() == "with_discord") {
+        if (interaction.options.getSubcommand() === "with_discord") {
             const teamFilename = interaction.options.getString("team");
             const userArray = [interaction.options.getUser("user_one"), interaction.options.getUser("user_two"), interaction.options.getUser("user_three"), interaction.options.getUser("user_four"),];
 
@@ -211,7 +211,7 @@ module.exports = {
 
                 await createCard(interaction, nameArray, imageArray, `./src/teamPhotos/${teamFilename}`, teamFilename, eventNumber, attachment);
             }
-        } else if (interaction.options.getSubcommand() == "with_minecraft") {
+        } else if (interaction.options.getSubcommand() === "with_minecraft") {
             const teamFilename = interaction.options.getString("team");
             const userArray = [interaction.options.getString("player_one"), interaction.options.getString("player_two"), interaction.options.getString("player_three"), interaction.options.getString("player_four"),];
 
@@ -232,7 +232,7 @@ module.exports = {
             const eventNumber = interaction.options.getInteger("event_number") || " ";
 
             await createCard(interaction, nameArray, headArray, `./src/teamPhotos/${teamFilename}`, teamFilename, eventNumber, attachment);
-        } else if (interaction.options.getSubcommand() == "with_custom") {
+        } else if (interaction.options.getSubcommand() === "with_custom") {
             const teamImage = interaction.options.getAttachment("team_image");
             const userArray = [interaction.options.getString("name_one"), interaction.options.getString("name_two"), interaction.options.getString("name_three"), interaction.options.getString("name_four"),];
             const imageArray = [interaction.options.getAttachment("image_one").proxyURL, interaction.options.getAttachment("image_two").proxyURL, interaction.options.getAttachment("image_three").proxyURL, interaction.options.getAttachment("image_four").proxyURL,];
@@ -288,7 +288,7 @@ async function createCard(interaction, nameArray, imageArray, background, teamFi
             textWidth = context.measureText(name).width;
         }
         context.fillText(name, 377 * i - 54, 714);
-        if (i == 1) {
+        if (i === 1) {
             context.font = `34px MinecrafterFont`;
             context.fillText(eventNumber.toString(), 113, 114);
             context.fillText(eventNumber.toString(), 1672, 894);

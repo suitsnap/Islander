@@ -3,7 +3,7 @@ const {
 } = require("discord.js");
 const {ticketButton} = require("./events/ticketButton");
 const {currencyButton} = require("./events/currencyButton");
-const {token, databaseToken} = require("./config.json");
+const {altToken, databaseToken} = require("./config.json");
 const {connect} = require("mongoose");
 const fs = require("fs");
 const path = require("path");
@@ -23,8 +23,7 @@ const client = new Client({
 
 client.cooldowns = new Collection();
 
-// const statusOptions = [["Battle Box", ActivityType.Playing], ["Dynaball", ActivityType.Playing], ["Hole in the Wall", ActivityType.Playing], ["Parkour Warrior: Dojo", ActivityType.Playing], ["Parkour Warrior: Survivor", ActivityType.Playing], ["Sky Battle", ActivityType.Playing], ["To Get to the Other Side", ActivityType.Playing], ["play.mccisland.net", ActivityType.Playing], ["MCC Island Speedruns", ActivityType.Watching], ["Admin Streams", ActivityType.Streaming, "https://twitch.tv/thenoxcrew"], ["the MCC Soundtrack", ActivityType.Listening], ["MCCI Tournaments", ActivityType.Competing],];
-const statusOptions = [["UNDER MAINTENANCE", ActivityType.Playing], ["STUFF IS NOT WORKING", ActivityType.Playing], ["WILL FIX TOMORROW MORNING GMT", ActivityType.Playing]]
+const statusOptions = [["Testing!", ActivityType.Playing], ["Crying!", ActivityType.Playing]];
 let statusIndex = 0;
 
 /**
@@ -33,9 +32,6 @@ let statusIndex = 0;
 function updateStatus() {
     const newStatus = statusOptions[statusIndex];
     const activities = [{name: newStatus[0], type: newStatus[1]}];
-    if (newStatus[1] === ActivityType.Streaming && newStatus[2]) {
-        activities[0].url = newStatus[2];
-    }
     client.user.setPresence({
         activities, status: "online",
     });
@@ -85,33 +81,6 @@ client.on("ready", () => {
     updateStatus();
     setInterval(updateStatus, 5000);
     console.log(`Ready! Logged in as ${client.user.tag}`);
-    //List the names of all the guilds the bot is in
-    const guilds = client.guilds.cache;
-    console.log(`Islander is in ${guilds.size} guilds!`);
-    let memberCount = 0;
-    client.guilds.cache.forEach((guild) => {
-        guild.fetchOwner().then((owner) => {
-            console.log(`${green}${guild.name}${reset} - ${red}${guild.memberCount} members ${reset} - Owned by ${yellow}${owner.user.displayName}${reset}`);
-        });
-        memberCount += guild.memberCount;
-    });
-    console.log(`Total members: ${memberCount}`);
-});
-
-process.on("unhandledRejection", async (reason, promise) => {
-    console.log(red + "ERROR - Unhandled Rejection" + reset, `Reason: ${reason}\nPromise: ${promise}`);
-});
-
-process.on("uncaughtException", (err) => {
-    console.log(red + "ERROR - Uncaught Exception" + reset, `Error: ${err}`);
-});
-
-process.on("uncaughtExceptionMonitor", (err, origin) => {
-    console.log(red + "ERROR - Uncaught Exception Monitor" + reset, `Error: ${err}\nOrigin: ${origin}`);
-});
-
-client.on("error", (err) => {
-    console.log(red + "ERROR - Discord.js Error in Index" + reset, `Error: ${err}`);
 });
 
 client.on("interactionCreate", async (interaction) => {
@@ -127,7 +96,7 @@ client.on("interactionCreate", async (interaction) => {
     }
 
     //Add logging for commands. Should log the guild, command name and arguments, user and time.
-    console.log(`${blue} ${new Date().toLocaleString()}- ${green}${interaction.guild.name}${reset} - ${yellow}${interaction.user.tag}${reset} - ${aqua}${interaction.commandName}${reset} - ${purple}${interaction.options.data
+    console.log(`${blue}${new Date().toLocaleString()} - ${green}${interaction.guild.name}${reset} - ${yellow}${interaction.user.tag}${reset} - ${aqua}${interaction.commandName}${reset} - ${purple}${interaction.options.data
         .map((option) => option.name + " | " + option.value)
         .join(" - ")}${reset}`);
 
@@ -151,29 +120,11 @@ client.on("interactionCreate", async (interaction) => {
     timestamps.set(interaction.user.id, now);
     setTimeout(() => timestamps.delete(interaction.user.id), cooldownAmount);
 
-    try {
-        await command.execute(interaction);
-    } catch (error) {
-        console.log(red + "ERROR - Discord.js Error in Command" + reset, `Error: ${error}`);
-        await interaction.reply({
-            content: "There was an error executing this command",
-        });
-    }
+    await command.execute(interaction);
 });
 
 client.on("interactionCreate", async (buttonInteraction) => {
     if (buttonInteraction.isButton()) {
-        if (buttonInteraction.customId === "ticket-button") {
-            ticketButton(buttonInteraction);
-        }
-        if (buttonInteraction.customId === "close-button") {
-            await buttonInteraction.channel.delete();
-        }
-        if (buttonInteraction.customId === "ping-button") {
-            buttonInteraction.reply(`Pinging ${buttonInteraction.guild.roles.cache
-                .get("1105256862670127196")
-                .toString()}! Please remember not to abuse this feature as our staff are human too!`);
-        }
         if (buttonInteraction.customId === "currency") {
             await currencyButton(buttonInteraction);
             const disabledButton = new ButtonBuilder()
@@ -190,7 +141,7 @@ client.on("interactionCreate", async (buttonInteraction) => {
 });
 
 
-client.login(token);
+client.login(altToken);
 (async () => {
     await connect(databaseToken, {
         keepAlive: true, useNewUrlParser: true, useUnifiedTopology: true,
